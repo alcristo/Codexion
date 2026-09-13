@@ -6,7 +6,7 @@
 /*   By: alcristo <alcristo@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/12 14:55:38 by alcristo          #+#    #+#             */
-/*   Updated: 2026/09/12 15:28:29 by alcristo         ###   ########.fr       */
+/*   Updated: 2026/09/13 11:11:57 by alcristo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,10 +53,10 @@ t_param	*parse_params(char **argv) {
 	else if (strcmp(argv[8], "edf"))
 		params->scheduler = EDF;
 	params->num = atoi(argv[1]);
-	params->time_burnout = atoi(argv[2]);
-	params->time_compile = atoi(argv[3]);
-	params->time_debug = atoi(argv[4]);
-	params->time_refactor = atoi(argv[5]);
+	params->time_burnout = atoi(argv[2]) * 1000;
+	params->time_compile = atoi(argv[3]) * 1000;
+	params->time_debug = atoi(argv[4]) * 1000;
+	params->time_refactor = atoi(argv[5]) * 1000;
 	params->required = atoi(argv[6]);
 	params->cooldown = atoi(argv[7]);
 	return params;

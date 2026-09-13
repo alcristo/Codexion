@@ -6,7 +6,7 @@
 /*   By: alcristo <alcristo@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/12 15:46:57 by alcristo          #+#    #+#             */
-/*   Updated: 2026/09/12 16:55:24 by alcristo         ###   ########.fr       */
+/*   Updated: 2026/09/13 14:46:55 by alcristo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,11 @@ void	free_coders(t_coder **coders) {
 	while (coders[i++])
 	{
 		pthread_mutex_destroy(coder[i]->mutex);
-		pthread_cond_destroy(coder[i]->cond);
+		pthread_mutex_destroy(coder[i]->go);
+		pthread_cond_destroy(coder[i]->wait);
 		coder[i]->sim = NULL;
+		coder[i]->left = NULL;
+		coder[i]->right = NULL;
 		free(coders[i]);
 	}
 	free(coders);

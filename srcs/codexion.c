@@ -6,7 +6,7 @@
 /*   By: alcristo <alcristo@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/08 14:51:42 by alcristo          #+#    #+#             */
-/*   Updated: 2026/09/12 15:46:43 by alcristo         ###   ########.fr       */
+/*   Updated: 2026/09/13 14:35:40 by alcristo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,17 +16,19 @@ void	free_sim(t_sim *sim) {
 	if (sim->params)
 		free(sim->params);
 	if (sim->coders)
-		free(sim->coders);
+		free_coders(sim->coders);
 	if (sim->dongles)
-		free(sim->dongles);
+		free_dongles(sim->dongles);
 	if (sim->logger)
-		free(sim->logger);
+		free_logger(sim->logger);
 	if (sim->heap)
-		free(sim->heap);
+		free_heap(sim->heap);
 	free(sim);
 }
 
 int main(int argc, char **argv) {
+	t_sim	*sim:
+
 	if (parse_args(argc, argv))
 		return (0);
 	sim = malloc(sizeof(t_sim));
@@ -47,7 +49,5 @@ int main(int argc, char **argv) {
 	sim->heap = create_heap(sim->params);
 	if (!sim->heap)
 		return (free_sim(sim), 0);
-	while (i++ < args[0])
-		pthread_join(&coders[i]);
 	return (0);
 }

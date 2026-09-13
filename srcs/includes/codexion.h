@@ -6,7 +6,7 @@
 /*   By: alcristo <alcristo@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/08 15:32:33 by alcristo          #+#    #+#             */
-/*   Updated: 2026/09/12 16:02:08 by alcristo         ###   ########.fr       */
+/*   Updated: 2026/09/13 12:42:29 by alcristo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,11 +47,13 @@ typedef struct s_heap {
 	t_heap_node	**nodes;
 	size_t		size;
 	size_t		capacity;
+	t_scheduler	mode;
 } t_heap;
 
 typedef struct s_dongle {
 	int				id;
-	pthread_mutex_t	*mutex;
+	pthread_mutex_t	*free;
+	pthread_cond_t	*cool;
 } t_dongle;
 
 typedef enum e_coder_status {
@@ -71,7 +73,8 @@ typedef struct s_coder {
 	t_dongle		*left;
 	t_dongle		*right;
 	pthread_mutex_t	*mutex;
-	pthread_cond_t	*cond;
+	pthread_mutex_t	*go;
+	pthread_cond_t	*wait;
 	t_sim			*sim;
 } t_coder;
 
