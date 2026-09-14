@@ -6,11 +6,12 @@
 /*   By: alcristo <alcristo@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/12 14:55:38 by alcristo          #+#    #+#             */
-/*   Updated: 2026/09/13 11:11:57 by alcristo         ###   ########.fr       */
+/*   Updated: 2026/09/14 11:50:55 by alcristo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/codexion.h"
+
 int	ft_ispos(char *s) {
 	size_t	i;
 
@@ -34,7 +35,9 @@ int	parse_args(int argc, char **argv) {
 	while (i++ < argc - 1)
 	{
 		if (ft_ispos(argv[i])
-			return (printf("Invalid argument: %s\n"), 1);
+			return (printf("Invalid argument: %s\n", argv[i]), 1);
+		if (ft_atol(argv[i]) == INT_MAX + 1)
+			return (printf("Invalid argument: %s\n", argv[i]), 1);
 	}
 	if (atoi(argv[1] < 2))
 		return (print("At least two coders are required to compile\n"), 1);
@@ -43,7 +46,6 @@ int	parse_args(int argc, char **argv) {
 
 t_param	*parse_params(char **argv) {
 	t_params			*params;
-	//enum e_scheduler	sch;
 
 	params = malloc(sizeof(t_params));
 	if (!params)

@@ -6,11 +6,12 @@
 /*   By: alcristo <alcristo@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/12 15:46:57 by alcristo          #+#    #+#             */
-/*   Updated: 2026/09/13 14:46:55 by alcristo         ###   ########.fr       */
+/*   Updated: 2026/09/13 16:31:32 by alcristo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/codexion.h"
+
 void	free_coders(t_coder **coders) {
 	int	i;
 
@@ -41,6 +42,7 @@ t_coder	*init_coder(size_t i) {
 	coder->left = NULL;
 	coder->right = NULL;
 	pthread_mutex_init(coder->mutex, NULL);
+	pthread_mutex_init(coder->go, NULL);
 	pthread_cond_init(coder->cond, NULL);
 	return (coder);
 }

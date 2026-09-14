@@ -6,14 +6,14 @@
 /*   By: alcristo <alcristo@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/09 16:28:54 by alcristo          #+#    #+#             */
-/*   Updated: 2026/09/13 13:28:12 by alcristo         ###   ########.fr       */
+/*   Updated: 2026/09/14 11:41:28 by alcristo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void ft_swap(int *a, int *b) {
-	int	temp;
+void ft_swap(t_heap_node *a, t_heap_node *b) {
+	t_heap_node	*temp;
 
 	temp = *a;
 	*a = *b;
@@ -56,24 +56,33 @@ void heap_down(t_heap *heap, size_t index) {
 	heap_down(heap, min);
 }
 
-void enqueue(t_heap *heap, int value) {
+void enqueue(t_heap *heap, t_coder *coder) {
+	t_heap_node	*node;
+
 	if (heap->size == heap->capacity)
 		return ;
-	heap->nodes[heap->size] = value;
+	heap->nodes[size]->coder = coder;
+	heap->nodes[size]->deadline = coder->last_compile - coder->sim->start_time;
+	/*node = malloc(sizeof(t_heap_node));
+	if (!node)
+		return ;
+	node->coder = coder;
+	node->deadline = coder->last_compile - coder->sim->start_time;
+	heap->nodes[heap->size] = node;*/
 	heap->size++;
 	if (heap->mode = EDF)
 		heap_up(heap, heap->size - 1);
 }
 
 int	dequeue(t_heap *heap) {
-	int max;
+	int min;
 
 	if heap->size == 0:
 		return (-1);
-	max = heap->nodes[0]
+	min = heap->nodes[0];
 	heap->size--;
 	heap->nodes[0] = heap->nodes[heap->size];
 	if (heap->size > 0 && heap->mode = EDF)
 		heap_down(heap, 0);
-	return (max)
+	return (min)
 }

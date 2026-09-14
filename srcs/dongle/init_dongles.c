@@ -6,7 +6,7 @@
 /*   By: alcristo <alcristo@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/12 16:05:56 by alcristo          #+#    #+#             */
-/*   Updated: 2026/09/12 16:37:12 by alcristo         ###   ########.fr       */
+/*   Updated: 2026/09/14 15:27:05 by alcristo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ t_dongle	*init_dongle(size_t i) {
 	if (!dongle)
 		return (NULL);
 	dongle->id = i;
+	dongle->cool = 0;
 	pthread_mutex_init(dongle->mutex, NULL);
 	return (dongle);
 }
