@@ -12,17 +12,24 @@
 
 #include "../includes/codexion.h"
 
-void	free_log(t_log_node *log) {
-	free_coder(log->coder);
+void	free_log(t_log_node *log)
+{
+	log->coder = NULL;
 	free(log);
 }
 
-void	free_logger(t_logger *logger) {
+void	free_logger(t_logger *logger)
+{
 	t_log_node	*current;
 
-	pthread_mutex_destroy(logger->writing);
-	if (!logger->logs)
-		return ;
+	if (logger->mutex)
+	{
+		pthread_mutex_destroy(logger->mutex);
+		free(logger->mutex);
+	}
+	logger->last = NULL;
+	/*if (!logger->logs)
+		return (free(logger));*/
 	current = logger->logs;
 	while (current)
 	{
@@ -30,16 +37,25 @@ void	free_logger(t_logger *logger) {
 		free_log(current);
 		current = logger->logs;
 	}
+	while (logger->logs)
+		print_log(logger);
+	logger->sim = NULL;
 	free(logger);
 }
 
-t_logger	*create_logger() {
+t_logger	*create_logger(t_sim *sim)
+{
 	t_logger	*logger;
 
 	logger = malloc(sizeof(t_logger));
 	if (!logger)
-		return NULL;
+		return (NULL);
+	memset(logger, 0, sizeof(t_logger));
 	logger->logs = NULL;
-	pthread_mutex_init(logger->writing, NULL);
+	logger->mutex = malloc(sizeof(pthread_mutex_t));
+	if (!logger->mutex)
+		return (free_logger(logger), NULL);
+	pthread_mutex_init(logger->mutex, NULL);
+	logger->sim = sim;
 	return (logger);
 }

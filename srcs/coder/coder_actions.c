@@ -10,27 +10,48 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "codexion.h"
+#include "../includes/codexion.h"
 
-void	send_request(t_coder *coder) {
-	t_heap	*heap;
-	int		i;
-
+void	send_request(t_coder *coder)
+{
 	pthread_mutex_lock(coder->sim->heap->mutex);
-	heap = coder->sim->heap;
-	pthread_mutex_unlock(coder->sim->heap->mutex);
-	i = 0;
-	while (i++ < heap->size)
-	{
-		if (heap->nodes[i]->coder->id == coder->id)
-			return ;
-	}
-	pthread_mutex_lock(coder->sim->heap->mutex);
-	enqueue(heap, coder);
+	enqueue(coder->sim->heap, coder);
 	pthread_mutex_unlock(coder->sim->heap->mutex);
 }
 
-int	compile(t_coder *coder, t_dongle **dongles) {
+int	wait(t_coder *coder)
+{
+	struct timespec	time;
+	long			deadline;
+
+	pthread_mutex_lock(coder->mutex);
+	deadline = coder->sim->start_time + coder->last_compile
+		+ coder->sim->params->time_burnout;
+	pthread_mutex_unlock(coder->mutex);
+	time.tv_sec = deadline / 1000;
+	time.tv_nsec = (deadline % 1000) * 1000000L;
+	pthread_mutex_lock(coder->go);
+	while (!sim_should_stop(coder->sim) && !coder->permission)
+	{
+		if (pthread_cond_timedwait(coder->wait, coder->go, &time))
+			return (pthread_mutex_unlock(coder->go), 1);
+	}
+	return (pthread_mutex_unlock(coder->go), 0);
+}
+
+static void	burnout(t_coder *coder)
+{
+	pthread_mutex_lock(coder->mutex);
+	coder->status = BURNED_OUT;
+	pthread_mutex_unlock(coder->mutex);
+	send_log(coder, LOG_BURNOUT, now() - coder->sim->start_time);
+	pthread_mutex_lock(coder->sim->mutex);
+	coder->sim->stop = 1;
+	pthread_mutex_unlock(coder->sim->mutex);
+}
+
+int	compile(t_coder *coder, t_dongle **dongles)
+{
 	size_t	i;
 	int		n;
 	long	t;
@@ -38,35 +59,51 @@ int	compile(t_coder *coder, t_dongle **dongles) {
 	i = coder->id;
 	n = coder->sim->params->num;
 	send_request(coder);
-	pthread_cond_timedwait(wait, go, coder->sim->params->time_burnout);
+	if (wait(coder))
+		return (burnout(coder), 1);
+	pthread_mutex_lock(coder->go);
 	if (!coder->permission)
-		return (compile(coder, dongles));
-	coder->status++;
+		return (pthread_mutex_unlock(coder->go), 1);
+	pthread_mutex_unlock(coder->go);
 	grab_dongles(coder, dongles);
-	t = gettimeofday() - coder->sim->start_time;
+	pthread_mutex_lock(coder->mutex);
+	coder->status++;
+	t = now() - coder->sim->start_time;
 	coder->last_compile = t;
-	send_log(coder, "compile", t);
-	ft_sleep(coder->sim->params->time_compile);
-	release_dongles(coder, dongles);
+	pthread_mutex_unlock(coder->mutex);
+	if (coder->left && coder->right)
+	{
+		send_log(coder, LOG_COMPILE, t);
+		ft_sleep(coder->sim->params->time_compile);
+	}
+	pthread_mutex_lock(coder->mutex);
+	release_dongles(coder);
 	coder->times++;
 	coder->status++;
+	pthread_mutex_unlock(coder->mutex);
 	return (0);
 }
 
-void	debug(size_t i, t_coder *coder) {
+void	debug(t_coder *coder)
+{
 	long	t;
 
-	t = gettimeofday() - coder->sim->start_time;
-	send_log(coder, "debug", t);
-	ft_sleep(coder->sim->time_debug);
+	t = now() - coder->sim->start_time;
+	send_log(coder, LOG_DEBUG, t);
+	ft_sleep(coder->sim->params->time_debug);
+	pthread_mutex_lock(coder->mutex);
 	coder->status++;
+	pthread_mutex_unlock(coder->mutex);
 }
 
-void	refactor(size_t i, t_coder *coder) {
+void	refactor(t_coder *coder)
+{
 	long	t;
 
-	t = gettimeofday() - coder->sim->start_time;
-	send_log(coder, "refactor", t);
-	ft_sleep(coder->sim->time_refactor);
+	t = now() - coder->sim->start_time;
+	send_log(coder, LOG_REFACTOR, t);
+	ft_sleep(coder->sim->params->time_refactor);
+	pthread_mutex_lock(coder->mutex);
 	coder->status = IDLE;
+	pthread_mutex_unlock(coder->mutex);
 }

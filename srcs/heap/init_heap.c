@@ -12,60 +12,75 @@
 
 #include "../includes/codexion.h"
 
-void	free_heap_node(t_heap_node *node) {
-	node->coder->sim = NULL;
-	pthread_mutex_destroy(node->coder->go);
-	pthread_mutex_destroy(node->coder->mutex);
-	pthread_cond_destroy(node->coder->wait);
-	node->coder->left = NULL;
-	node->coder->right = NULL;
-	free(node->coder);
-	free(node);
+void	free_heap_node(t_heap_node *node)
+{
+	if (node)
+	{
+		node->coder = NULL;
+		free(node);
+	}
 }
 
-void	free_heap(t_heap *heap) {
-	int	i;
+void	free_heap(t_heap *heap)
+{
+	size_t	i;
 
+	if (!heap)
+		return ;
 	i = 0;
-	while (heap->nodes[i++])
-		free_heap_node(heap->nodes[i]);
+	while (i < heap->capacity)
+		free_heap_node(heap->nodes[i++]);
+	free(heap->nodes);
+	if (heap->mutex)
+	{
+		pthread_mutex_destroy(heap->mutex);
+		free(heap->mutex);
+	}
+	heap->sim = NULL;
 	free(heap);
 }
 
-int	init_nodes(t_heap *heap) {
-	int			i;
+int	init_nodes(t_heap *heap)
+{
+	size_t		i;
 	t_heap_node	*node;
 
 	i = 0;
-	while(i++ < heap->capacity)
+	while (i < (size_t)heap->capacity)
 	{
-		node = malloc(sizeof(t_node));
+		node = malloc(sizeof(t_heap_node));
 		if (!node)
-		{
-			while (--i >= 0)
-				free_heap_node(heap->nodes[i]);
 			return (1);
-		}
 		node->coder = NULL;
 		node->deadline = 0;
-		heap->nodes[i] == node;
+		heap->nodes[i++] = node;
 	}
 	return (0);
 }
 
-t_heap	*create_heap(t_params *params) {
-	t_heap	*heap;
+t_heap	*create_heap(t_sim *sim)
+{
+	t_heap		*heap;
+	t_params	*params;
 
 	heap = malloc(sizeof(t_heap));
 	if (!heap)
 		return (NULL);
+	memset(heap, 0, sizeof(t_heap));
+	params = sim->params;
 	heap->nodes = malloc(params->num * sizeof(t_heap_node *));
 	if (!heap->nodes)
 		return (free_heap(heap), NULL);
+	memset(heap->nodes, 0, sizeof(t_heap_node *));
 	heap->size = 0;
 	heap->capacity = params->num;
 	if (init_nodes(heap))
 		return (free_heap(heap), NULL);
+	heap->mutex = malloc(sizeof(pthread_mutex_t));
+	if (!heap->mutex)
+		return (free_heap(heap), NULL);
+	pthread_mutex_init(heap->mutex, NULL);
 	heap->mode = params->scheduler;
+	heap->sim = sim;
 	return (heap);
 }
