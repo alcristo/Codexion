@@ -10,6 +10,7 @@ SOURCES =	srcs/simulation/main.c \
 			srcs/dongle/init_dongles.c \
 			srcs/dongle/dongle_actions.c \
 			srcs/heap/init_heap.c \
+			srcs/heap/tiebreaker.c \
 			srcs/heap/heap_ops.c \
 			srcs/logger/init_logger.c \
 			srcs/logger/log_ops.c \

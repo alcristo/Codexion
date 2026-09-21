@@ -21,34 +21,6 @@ void	ft_swap(t_heap_node *a, t_heap_node *b)
 	*b = temp;
 }
 
-void	tiebreaker(t_heap *heap)
-{
-	size_t	i;
-	int		id;
-	int		go;
-	int		n;
-
-	i = 0;
-	n = heap->sim->params->num;
-	go = 0;
-	while (i < heap->size - 1
-		&& heap->nodes[i]->deadline == heap->nodes[i + 1]->deadline)
-	{
-		id = heap->nodes[i]->coder->id - 1;
-		check_dongles(heap->sim->dongles, id, n);
-		if (!heap->sim->dongles[id]->owned
-			&& !heap->sim->dongles[id]->cool
-			&& !heap->sim->dongles[(id + 1) % n]->owned
-			&& !heap->sim->dongles[(id + 1) % n]->cool)
-			go = 1;
-		pthread_mutex_unlock(heap->sim->dongles[id]->mutex);
-		pthread_mutex_unlock(heap->sim->dongles[(id + 1) % n]->mutex);
-		if (go)
-			return (ft_swap(heap->nodes[0], heap->nodes[i]));
-		i++;
-	}
-}
-
 void	next_request(t_heap *heap)
 {
 	size_t	i;

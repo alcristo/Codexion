@@ -126,7 +126,8 @@ typedef struct s_sim
 	int				started;
 	int				stop;
 	int				finished;
-	//int				last_permission;
+	int				last_permission;
+	int				first_routine;
 	t_logger		*logger;
 	t_heap			*heap;
 	pthread_mutex_t	*mutex;
@@ -198,6 +199,9 @@ void		dequeue(t_heap *heap);
 void		heap_up(t_heap *heap, size_t index);
 void		heap_down(t_heap *heap, size_t index);
 void		next_request(t_heap *heap);
+void		tie_break(t_heap *heap);
+void		even(t_heap *heap);
+void		odd(t_heap *heap);
 void		tiebreaker(t_heap *heap);
 
 // Logger

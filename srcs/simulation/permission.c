@@ -27,7 +27,7 @@ static void	permission_accepted(t_sim *sim, t_coder *coder)
 	sim->dongles[(i + 1) % n]->owned = 1;
 	pthread_mutex_unlock(sim->dongles[(i + 1) % n]->mutex);
 	pthread_mutex_lock(coder->go);
-	//sim->last_permission = coder->id;
+	sim->last_permission = coder->id;
 	coder->permission = 1;
 	pthread_cond_broadcast(coder->wait);
 	pthread_mutex_unlock(coder->go);
@@ -104,7 +104,7 @@ void	attend_request(t_sim *sim)
 			|| first->deadline == sim->heap->nodes[2]->deadline)
 		{
 			if (sim->heap->mode == EDF)
-				tiebreaker(sim->heap);
+				tie_break(sim->heap);
 		}
 	}
 }

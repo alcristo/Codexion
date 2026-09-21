@@ -73,7 +73,7 @@ int	parse_args(int argc, char **argv)
 		if (ft_atol(argv[i]) == (long)INT_MAX + 1)
 			return (printf("Invalid integer argument: %s\n", argv[i]), 1);
 	}
-	if (atoi(argv[1]) < 1 || argv[1] > 200)
+	if (atoi(argv[1]) < 1 || atoi(argv[1]) > 200)
 		return (printf("Coders range must be between 1 and 200\n"), 1);
 	return (0);
 }
