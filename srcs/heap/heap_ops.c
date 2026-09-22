@@ -12,6 +12,18 @@
 
 #include "../includes/codexion.h"
 
+static int	heap_before(t_heap_node *a, t_heap_node *b)
+{
+	if (a->deadline != b->deadline)
+		return (a->deadline < b->deadline);
+	if (a->times == 0 && b->times == 0)
+	{
+		if ((a->coder->id % 2) != (b->coder->id % 2))
+			return (a->coder->id % 2 == 0);
+	}
+	return (a->coder->id < b->coder->id);
+}
+
 void	ft_swap(t_heap_node *a, t_heap_node *b)
 {
 	t_heap_node	temp;
@@ -21,23 +33,6 @@ void	ft_swap(t_heap_node *a, t_heap_node *b)
 	*b = temp;
 }
 
-void	next_request(t_heap *heap)
-{
-	size_t	i;
-
-	i = 0;
-	if (heap->nodes[0]->deadline != heap->nodes[1]->deadline
-		&& heap->nodes[0]->deadline == heap->nodes[2]->deadline)
-		return (ft_swap(heap->nodes[0], heap->nodes[2]));
-	while (i < heap->size - 1
-		&& heap->nodes[i]->deadline == heap->nodes[i + 1]->deadline)
-	{
-		ft_swap(heap->nodes[i], heap->nodes[i + 1]);
-		i++;
-	}
-	heap_up(heap, i);
-}
-
 void	heap_up(t_heap *heap, size_t index)
 {
 	size_t	parent;
@@ -45,7 +40,7 @@ void	heap_up(t_heap *heap, size_t index)
 	while (index > 0)
 	{
 		parent = (index - 1) / 2;
-		if (heap->nodes[parent]->deadline <= heap->nodes[index]->deadline)
+		if (!heap_before(heap->nodes[index], heap->nodes[parent]))
 			break ;
 		ft_swap(heap->nodes[parent], heap->nodes[index]);
 		index = parent;
@@ -56,23 +51,23 @@ void	heap_down(t_heap *heap, size_t index)
 {
 	size_t	son1;
 	size_t	son2;
-	size_t	min;
+	size_t	best;
 
 	while (1)
 	{
 		son1 = 2 * index + 1;
 		son2 = 2 * index + 2;
-		min = index;
+		best = index;
 		if (son1 < heap->size
-			&& heap->nodes[son1]->deadline < heap->nodes[min]->deadline)
-			min = son1;
+			&& heap_before(heap->nodes[son1], heap->nodes[best]))
+			best = son1;
 		if (son2 < heap->size
-			&& heap->nodes[son2]->deadline < heap->nodes[min]->deadline)
-			min = son2;
-		if (min == index)
+			&& heap_before(heap->nodes[son2], heap->nodes[best]))
+			best = son2;
+		if (best == index)
 			break ;
-		ft_swap(heap->nodes[index], heap->nodes[min]);
-		index = min;
+		ft_swap(heap->nodes[index], heap->nodes[best]);
+		index = best;
 	}
 }
 
@@ -85,11 +80,13 @@ void	enqueue(t_heap *heap, t_coder *coder)
 	size = heap->size;
 	heap->nodes[size]->coder = coder;
 	pthread_mutex_lock(coder->mutex);
+	heap->nodes[size]->times = coder->times;
 	if (coder->times == 0)
 		heap->nodes[size]->deadline = coder->sim->params->time_burnout;
 	else
 		heap->nodes[size]->deadline = coder->last_compile
-			+ coder->sim->params->time_burnout;
+			+ coder->sim->params->time_burnout
+			+ coder->sim->params->time_compile;
 	pthread_mutex_unlock(coder->mutex);
 	heap->size++;
 	if (heap->mode == EDF)

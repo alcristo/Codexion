@@ -27,9 +27,12 @@ void	free_logger(t_logger *logger)
 		pthread_mutex_destroy(logger->mutex);
 		free(logger->mutex);
 	}
+	if (logger->wait)
+	{
+		pthread_cond_destroy(logger->wait);
+		free(logger->wait);
+	}
 	logger->last = NULL;
-	/*if (!logger->logs)
-		return (free(logger));*/
 	current = logger->logs;
 	while (current)
 	{
@@ -37,8 +40,6 @@ void	free_logger(t_logger *logger)
 		free_log(current);
 		current = logger->logs;
 	}
-	while (logger->logs)
-		print_log(logger);
 	logger->sim = NULL;
 	free(logger);
 }
@@ -56,6 +57,10 @@ t_logger	*create_logger(t_sim *sim)
 	if (!logger->mutex)
 		return (free_logger(logger), NULL);
 	pthread_mutex_init(logger->mutex, NULL);
+	logger->wait = malloc(sizeof(pthread_cond_t));
+	if (!logger->wait)
+		return (free_logger(logger), NULL);
+	pthread_cond_init(logger->wait, NULL);
 	logger->sim = sim;
 	return (logger);
 }

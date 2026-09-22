@@ -12,7 +12,7 @@
 
 #include "../includes/codexion.h"
 
-void	even(t_heap *heap)
+/*void	even(t_heap *heap)
 {
 	size_t	i;
 
@@ -94,8 +94,8 @@ void	tie_break(t_heap *heap)
 	{
 		if (heap->sim->params->num % 2)
 			return (odd(heap));
-		else
-			return (even(heap));
+//		else
+//			return (even(heap));
 	}
 	else
 	{
@@ -103,4 +103,4 @@ void	tie_break(t_heap *heap)
 			heap->sim->first_routine = 0;
 		return (tiebreaker(heap));
 	}
-}
+}*/

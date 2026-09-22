@@ -50,16 +50,25 @@ void	release_dongles(t_coder *coder)
 
 	left = coder->left;
 	right = coder->right;
-	coder->left = NULL;
-	coder->right = NULL;
-	coder->permission = 0;
-	pthread_mutex_lock(left->mutex);
+	if (left->id < right->id)
+	{
+		pthread_mutex_lock(left->mutex);
+		pthread_mutex_lock(right->mutex);
+	}
+	else
+	{
+		pthread_mutex_lock(right->mutex);
+		pthread_mutex_lock(left->mutex);
+	}
 	left->owned = 0;
 	pthread_mutex_unlock(left->mutex);
-	pthread_mutex_lock(right->mutex);
 	right->owned = 0;
 	pthread_mutex_unlock(right->mutex);
-	return ;
+	coder->left = NULL;
+	coder->right = NULL;
+	pthread_mutex_lock(coder->go);
+	coder->permission = 0;
+	pthread_mutex_unlock(coder->go);
 }
 
 void	grab_dongles(t_coder *coder, t_dongle **dongles)
@@ -70,10 +79,10 @@ void	grab_dongles(t_coder *coder, t_dongle **dongles)
 
 	i = coder->id - 1;
 	n = coder->sim->params->num;
-	t = now() - coder->sim->start_time;
-	send_log(coder, LOG_GRAB, t);
 	coder->left = dongles[i % n];
 	t = now() - coder->sim->start_time;
 	send_log(coder, LOG_GRAB, t);
 	coder->right = dongles[(i + 1) % n];
+	t = now() - coder->sim->start_time;
+	send_log(coder, LOG_GRAB, t);
 }

@@ -69,6 +69,10 @@ static int	sim_init(t_sim *sim)
 	if (!sim->start)
 		return (1);
 	pthread_cond_init(sim->start, NULL);
+	sim->request_wait = malloc(sizeof(pthread_cond_t));
+	if (!sim->request_wait)
+		return (1);
+	pthread_cond_init(sim->request_wait, NULL);
 	return (0);
 }
 

@@ -23,7 +23,6 @@ int	print_log(t_logger *logger)
 	logger->logs = first->next;
 	if (!logger->logs)
 		logger->last = NULL;
-	pthread_mutex_unlock(logger->mutex);
 	if (!logger->silence)
 	{
 		if (first->op == LOG_BURNOUT)
@@ -32,7 +31,7 @@ int	print_log(t_logger *logger)
 			logger->silence = 1;
 		}
 		else if (first->op == LOG_GRAB)
-			printf("%ld %d is grabbing a dongle\n", first->time, first->coder->id);
+			printf("%ld %d has taken a dongle\n", first->time, first->coder->id);
 		else if (first->op == LOG_COMPILE)
 			printf("%ld %d is compiling\n", first->time, first->coder->id);
 		else if (first->op == LOG_DEBUG)
@@ -40,6 +39,7 @@ int	print_log(t_logger *logger)
 		else if (first->op == LOG_REFACTOR)
 			printf("%ld %d is refactoring\n", first->time, first->coder->id);
 	}
+	pthread_mutex_unlock(logger->mutex);
 	free_log(first);
 	return (1);
 }
@@ -48,6 +48,14 @@ void	enqueue_log(t_logger *logger, t_log_node *new)
 {
 	if (!new)
 		return ;
+	if (new->op == LOG_BURNOUT)
+	{
+		new->next = logger->logs;
+		logger->logs = new;
+		if (!logger->last)
+			logger->last = new;
+		return ;
+	}
 	if (!logger->logs)
 	{
 		logger->logs = new;
@@ -64,17 +72,13 @@ void	send_log(t_coder *coder, t_log_op op, long timestamp)
 
 	new = malloc(sizeof(t_log_node));
 	if (!new)
-	{
-		pthread_mutex_lock(coder->sim->mutex);
-		coder->sim->stop = 1;
-		pthread_mutex_unlock(coder->sim->mutex);
-		return ;
-	}
+		return (tell_to_stop(coder->sim));
 	new->coder = coder;
 	new->op = op;
 	new->time = timestamp;
 	new->next = NULL;
 	pthread_mutex_lock(coder->sim->logger->mutex);
 	enqueue_log(coder->sim->logger, new);
+	pthread_cond_broadcast(coder->sim->logger->wait);
 	pthread_mutex_unlock(coder->sim->logger->mutex);
 }
