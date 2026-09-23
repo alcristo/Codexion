@@ -30,14 +30,9 @@ void	send_request(t_coder *coder)
 		i++;
 	}
 	enqueue(heap, coder);
-	pthread_mutex_lock(coder->sim->mutex);
 	coder->sim->request_seq++;
 	pthread_cond_broadcast(coder->sim->request_wait);
-	pthread_mutex_unlock(coder->sim->mutex);
 	pthread_mutex_unlock(heap->mutex);
-	pthread_mutex_lock(coder->sim->mutex);
-	pthread_cond_broadcast(coder->sim->request_wait);
-	pthread_mutex_unlock(coder->sim->mutex);
 }
 
 int	wait(t_coder *coder)
@@ -46,10 +41,12 @@ int	wait(t_coder *coder)
 	long			deadline;
 	int				ret;
 
+	pthread_mutex_lock(coder->sim->mutex);
 	pthread_mutex_lock(coder->mutex);
 	deadline = coder->sim->start_time + coder->last_compile
 		+ coder->sim->params->time_burnout;
 	pthread_mutex_unlock(coder->mutex);
+	pthread_mutex_unlock(coder->sim->mutex);
 	time.tv_sec = deadline / 1000;
 	time.tv_nsec = (deadline % 1000) * 1000000L;
 	pthread_mutex_lock(coder->go);
@@ -64,7 +61,7 @@ int	wait(t_coder *coder)
 	return (pthread_mutex_unlock(coder->go), 0);
 }
 
-static void	burnout(t_coder *coder)
+void	burnout(t_coder *coder)
 {
 	pthread_mutex_lock(coder->mutex);
 	coder->status = BURNED_OUT;
@@ -119,9 +116,6 @@ int	compile(t_coder *coder, t_dongle **dongles)
 
 	i = coder->id;
 	n = coder->sim->params->num;
-	pthread_mutex_lock(coder->go);
-	coder->permission = 0;
-	pthread_mutex_unlock(coder->go);
 	if (coder->times)
 		send_request(coder);
 	if (wait(coder))
@@ -129,6 +123,7 @@ int	compile(t_coder *coder, t_dongle **dongles)
 	pthread_mutex_lock(coder->go);
 	if (!coder->permission)
 		return (pthread_mutex_unlock(coder->go), 1);
+	coder->permission = 0;
 	pthread_mutex_unlock(coder->go);
 	pthread_mutex_lock(coder->mutex);
 	grab_dongles(coder, dongles);

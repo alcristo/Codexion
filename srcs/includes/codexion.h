@@ -180,6 +180,7 @@ pthread_t	*create_threads(t_sim *sim);
 int			sim_should_stop(t_sim *sim);
 void		director_routine(t_sim *sim);
 void		attend_request(t_sim *sim);
+void		grant_permission(t_sim *sim, t_coder *coder);
 void		tell_to_stop(t_sim *sim);
 //void		fifo(t_sim *sim, t_heap_node *first);
 //void		edf(t_sim *sim, t_heap_node *first);
@@ -191,6 +192,7 @@ void		send_request(t_coder *coder);
 int			compile(t_coder *coder, t_dongle **dongles);
 void		debug(t_coder *coder);
 void		refactor(t_coder *coder);
+void		burnout(t_coder *coder);
 
 // Dongles
 
@@ -207,6 +209,7 @@ void		enqueue(t_heap *heap, t_coder *coder);
 void		dequeue(t_heap *heap);
 void		heap_up(t_heap *heap, size_t index);
 void		heap_down(t_heap *heap, size_t index);
+size_t		heap_size(t_heap *heap);
 //void		next_request(t_heap *heap);
 //void		tie_break(t_heap *heap);
 //void		even(t_heap *heap);

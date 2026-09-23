@@ -32,6 +32,11 @@ void	free_sim(t_sim *sim)
 		pthread_cond_destroy(sim->start);
 		free(sim->start);
 	}
+	if (sim->request_wait)
+	{
+		pthread_cond_destroy(sim->request_wait);
+		free(sim->request_wait);
+	}
 	if (sim->params)
 		free(sim->params);
 	free(sim);

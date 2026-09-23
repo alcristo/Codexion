@@ -53,7 +53,7 @@ t_dongle	**create_dongles(t_params *params)
 	dongles = malloc(params->num * sizeof(t_dongle *));
 	if (!dongles)
 		return (NULL);
-	memset(dongles, 0, sizeof(t_dongle *));
+	memset(dongles, 0,params->num * sizeof(t_dongle *));
 	i = 0;
 	while (i < params->num)
 	{

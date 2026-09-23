@@ -71,7 +71,7 @@ t_heap	*create_heap(t_sim *sim)
 	heap->nodes = malloc(params->num * sizeof(t_heap_node *));
 	if (!heap->nodes)
 		return (free_heap(heap), NULL);
-	memset(heap->nodes, 0, sizeof(t_heap_node *));
+	memset(heap->nodes, 0, params->num * sizeof(t_heap_node *));
 	heap->size = 0;
 	heap->capacity = params->num;
 	if (init_nodes(heap))

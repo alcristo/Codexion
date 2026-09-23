@@ -38,9 +38,7 @@ void	cool_dongles(t_sim *sim)
 		pthread_mutex_unlock(dongles[i]->mutex);
 		i++;
 	}
-	pthread_mutex_lock(sim->mutex);
 	sim->last_cool += dt;
-	pthread_mutex_unlock(sim->mutex);
 }
 
 void	release_dongles(t_coder *coder)
@@ -48,6 +46,7 @@ void	release_dongles(t_coder *coder)
 	t_dongle	*left;
 	t_dongle	*right;
 
+	pthread_mutex_lock(coder->mutex);
 	left = coder->left;
 	right = coder->right;
 	if (left->id < right->id)
@@ -61,14 +60,14 @@ void	release_dongles(t_coder *coder)
 		pthread_mutex_lock(left->mutex);
 	}
 	left->owned = 0;
+	coder->left = NULL;
 	pthread_mutex_unlock(left->mutex);
 	right->owned = 0;
-	pthread_mutex_unlock(right->mutex);
-	coder->left = NULL;
 	coder->right = NULL;
-	pthread_mutex_lock(coder->go);
-	coder->permission = 0;
-	pthread_mutex_unlock(coder->go);
+	pthread_mutex_unlock(right->mutex);
+	pthread_mutex_unlock(coder->mutex);
+	if (!left || !right)
+		return ;
 }
 
 void	grab_dongles(t_coder *coder, t_dongle **dongles)

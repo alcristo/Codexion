@@ -12,6 +12,16 @@
 
 #include "../includes/codexion.h"
 
+size_t	heap_size(t_heap *heap)
+{
+	size_t	size;
+
+	pthread_mutex_lock(heap->mutex);
+	size = heap->size;
+	pthread_mutex_unlock(heap->mutex);
+	return (size);
+}
+
 int	sim_should_stop(t_sim *sim)
 {
 	int	stop;
@@ -20,6 +30,76 @@ int	sim_should_stop(t_sim *sim)
 	stop = sim->stop;
 	pthread_mutex_unlock(sim->mutex);
 	return (stop);
+}
+
+void	tell_to_stop(t_sim *sim)
+{
+	int	i;
+
+	pthread_mutex_lock(sim->mutex);
+	sim->stop = 1;
+	pthread_cond_broadcast(sim->request_wait);
+	pthread_mutex_unlock(sim->mutex);
+	i = 0;
+	pthread_mutex_lock(sim->logger->mutex);
+	//sim->logger->silence = 1;
+	pthread_cond_broadcast(sim->logger->wait);
+	pthread_mutex_unlock(sim->logger->mutex);
+	while (i < sim->params->num)
+	{
+		pthread_mutex_lock(sim->coders[i]->go);
+		pthread_cond_broadcast(sim->coders[i]->wait);
+		pthread_mutex_unlock(sim->coders[i]->go);
+		i++;
+	}
+}
+
+void	*monitor_routine(void *arg)
+{
+	int		i;
+	int		done;
+	t_sim	*sim;
+	long	start;
+	long	elapsed;
+	int		burned_out;
+
+	sim = (t_sim *)arg;
+	pthread_mutex_lock(sim->mutex);
+	while (!sim->started && !sim->stop)
+		pthread_cond_wait(sim->start, sim->mutex);
+	//sim->start_time = now();
+	start = sim->start_time;
+	pthread_mutex_unlock(sim->mutex);
+	burned_out = 0;
+	while (1)
+	{
+		i = 0;
+		done = 1;
+		while (i < sim->params->num)
+		{
+			pthread_mutex_lock(sim->coders[i]->mutex);
+			elapsed = now() - sim->start_time - sim->coders[i]->last_compile;
+			if (elapsed >= sim->params->time_burnout)
+			{
+				pthread_mutex_unlock(sim->coders[i]->mutex);
+				burnout(sim->coders[i]);
+				burned_out = 1;
+				break ;
+			}
+			if (sim->coders[i]->times < sim->params->required)
+				done = 0;
+			pthread_mutex_unlock(sim->coders[i]->mutex);
+			i++;
+		}
+		if (done || burned_out)
+			break ;
+		cool_dongles(sim);
+		if (sim_should_stop(sim))
+			return (NULL);
+		usleep(100);
+	}
+	tell_to_stop(sim);
+	return (NULL);
 }
 
 void	*coder_routine(void *arg)
@@ -36,7 +116,7 @@ void	*coder_routine(void *arg)
 	while (!sim_should_stop(coder->sim))
 	{
 		if (compile(coder, coder->sim->dongles))
-			continue ;
+			;
 		if (sim_should_stop(coder->sim))
 			return (NULL);
 		debug(coder);
@@ -73,73 +153,42 @@ void	*logger_routine(void *arg)
 		finished = sim->finished;
 		pthread_mutex_unlock(sim->mutex);
 		if (finished)
+		{
+			while (print_log(logger))
+				;
 			break ;
+		}
 		pthread_mutex_lock(logger->mutex);
 		if (!logger->logs)
 			pthread_cond_wait(logger->wait, logger->mutex);
 		pthread_mutex_unlock(logger->mutex);
 	}
-	while (print_log(logger))
-		;
 	return (NULL);
-}
-
-void	tell_to_stop(t_sim *sim)
-{
-	int	i;
-
-	pthread_mutex_lock(sim->mutex);
-	sim->stop = 1;
-	//pthread_cond_broadcast(sim->start);
-	pthread_mutex_unlock(sim->mutex);
-	i = 0;
-	while (i < sim->params->num)
-	{
-		pthread_mutex_lock(sim->coders[i]->go);
-		pthread_cond_broadcast(sim->coders[i]->wait);
-		pthread_mutex_unlock(sim->coders[i]->go);
-		i++;
-	}
-	pthread_mutex_lock(sim->logger->mutex);
-	sim->logger->silence = 1;
-	pthread_cond_broadcast(sim->logger->wait);
-	pthread_mutex_unlock(sim->logger->mutex);
 }
 
 void	director_routine(t_sim *sim)
 {
-	int	i;
-	int	done;
+	t_coder	*coder;
 
 	while (!sim_should_stop(sim))
 	{
-		i = 0;
-		done = 1;
-		while (i < sim->params->num)
-		{
-			pthread_mutex_lock(sim->coders[i]->mutex);
-			if (sim->coders[i]->status == BURNED_OUT)
-				return (pthread_mutex_unlock(sim->coders[i]->mutex),
-					tell_to_stop(sim));
-			if (sim->coders[i]->times < sim->params->required)
-				done = 0;
-			pthread_mutex_unlock(sim->coders[i]->mutex);
-			i++;
-		}
-		if (done)
-			return (tell_to_stop(sim));
-		cool_dongles(sim);
 		pthread_mutex_lock(sim->heap->mutex);
-		while (!sim->stop && !sim->heap->size)
+		while (!sim->heap->size)
+		{
+			pthread_mutex_unlock(sim->heap->mutex);
+			if (sim_should_stop(sim))
+				return ;
+			pthread_mutex_lock(sim->heap->mutex);
 			pthread_cond_wait(sim->request_wait, sim->heap->mutex);
-		//pthread_mutex_unlock(sim->mutex);
+		}
 		if (sim_should_stop(sim))
 		{
 			pthread_mutex_unlock(sim->heap->mutex);
-			return ;
+			break ;
 		}
-		//pthread_mutex_lock(sim->heap->mutex);
-		attend_request(sim);
+		coder = sim->heap->nodes[0]->coder;
+		grant_permission(sim, coder);
+		//printf("grant %d at %ld\n", coder->id, now() - sim->start_time);
 		pthread_mutex_unlock(sim->heap->mutex);
 	}
 }
@@ -182,9 +231,6 @@ static void	initial_requests(t_sim *sim)
 		enqueue(sim->heap, sim->coders[i]);
 		i++;
 	}
-	/*i = 0;
-	while (i < (int)sim->heap->size)
-		printf("%d\n", sim->heap->nodes[i++]->coder->id);*/
 	pthread_mutex_unlock(sim->heap->mutex);
 }
 
@@ -192,12 +238,12 @@ void	preparatives(t_sim *sim)
 {
 	pthread_t	*coders;
 	pthread_t	logger;
+	pthread_t	monitor;
 	size_t		i;
 
 	if (pthread_create(&logger, NULL, logger_routine, sim))
 		return ;
-	coders = create_threads(sim);
-	if (!coders)
+	if (pthread_create(&monitor, NULL, monitor_routine, sim))
 	{
 		pthread_mutex_lock(sim->mutex);
 		sim->stop = 1;
@@ -206,8 +252,18 @@ void	preparatives(t_sim *sim)
 		pthread_join(logger, NULL);
 		return ;
 	}
+	coders = create_threads(sim);
+	if (!coders)
+	{
+		pthread_mutex_lock(sim->mutex);
+		sim->stop = 1;
+		pthread_cond_broadcast(sim->start);
+		pthread_mutex_unlock(sim->mutex);
+		pthread_join(logger, NULL);
+		pthread_join(monitor, NULL);
+		return ;
+	}
 	i = 0;
-	initial_requests(sim);
 	pthread_mutex_lock(sim->mutex);
 	sim->start_time = now();
 	if (sim->start_time < 0)
@@ -218,16 +274,30 @@ void	preparatives(t_sim *sim)
 		while (i < (size_t)sim->params->num)
 			pthread_join(coders[i++], NULL);
 		pthread_join(logger, NULL);
+		pthread_join(monitor, NULL);
 		free(coders);
 		return ;
 	}
+	i = 0;
 	sim->last_cool = sim->start_time;
+	while ((int)i < sim->params->num)
+	{
+		pthread_mutex_lock(sim->coders[i]->mutex);
+		sim->coders[i]->last_compile = 0;
+		pthread_mutex_unlock(sim->coders[i]->mutex);
+		i++;
+	}
 	sim->started = 1;
 	pthread_cond_broadcast(sim->start);
 	pthread_mutex_unlock(sim->mutex);
+	initial_requests(sim);
 	director_routine(sim);
+	i = 0;
 	while (i < (size_t)sim->params->num)
-		pthread_join(coders[i++], NULL);
+	{
+		pthread_join(coders[i], NULL);
+		i++;
+	}
 	pthread_mutex_lock(sim->mutex);
 	sim->finished = 1;
 	pthread_mutex_unlock(sim->mutex);
@@ -235,5 +305,6 @@ void	preparatives(t_sim *sim)
 	pthread_cond_broadcast(sim->logger->wait);
 	pthread_mutex_unlock(sim->logger->mutex);
 	pthread_join(logger, NULL);
+		pthread_join(monitor, NULL);
 	free(coders);
 }

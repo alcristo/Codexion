@@ -94,7 +94,7 @@ t_coder	**create_coders(t_sim *sim)
 	coders = malloc(sim->params->num * sizeof(t_coder *));
 	if (!coders)
 		return (NULL);
-	memset(coders, 0, sizeof(t_coder *));
+	memset(coders, 0, sim->params->num * sizeof(t_coder *));
 	i = 0;
 	while (i < (size_t)sim->params->num)
 	{
