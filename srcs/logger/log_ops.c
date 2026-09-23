@@ -12,9 +12,29 @@
 
 #include "../includes/codexion.h"
 
+void	send_burnout_log(t_coder *coder, long time, long deadline)
+{
+	t_log_node	*log;
+
+	log = malloc(sizeof(t_log_node));
+	if(!log)
+		return ;
+	log->op = LOG_BURNOUT;
+	log->coder = coder;
+	log->time = time;
+	log->deadline = deadline - coder->sim->start_time;
+	log->next = NULL;
+	pthread_mutex_lock(coder->sim->logger->mutex);
+	enqueue_log(coder->sim->logger, log);
+	pthread_cond_broadcast(coder->sim->logger->wait);
+	pthread_mutex_unlock(coder->sim->logger->mutex);
+}
+
 int	print_log(t_logger *logger)
 {
 	t_log_node	*first;
+	//t_heap		*heap;
+	size_t		i;
 
 	pthread_mutex_lock(logger->mutex);
 	if (!logger->logs)
@@ -27,7 +47,20 @@ int	print_log(t_logger *logger)
 	{
 		if (first->op == LOG_BURNOUT)
 		{
-			printf("%ld %d burned out\n", first->time, first->coder->id);
+			i = 0;
+			/*heap = logger->sim->heap;
+			pthread_mutex_unlock(logger->mutex);
+			pthread_mutex_lock(heap->mutex);
+			while (i < heap->size)
+			{
+				if (heap->nodes[i]->coder->id == first->coder->id)
+					break ;
+				i++;
+			}
+			printf("%ld %d burned out (%ld->%ld)\n", first->time, first->coder->id, first->coder->last_compile, heap->nodes[i]->deadline);
+			pthread_mutex_unlock(heap->mutex);*/
+			printf("%ld %d burned out (%ld->%ld)\n", first->time, first->coder->id, first->coder->last_compile, first->deadline);
+			//pthread_mutex_lock(logger->mutex);
 			logger->silence = 1;
 		}
 		else if (first->op == LOG_GRAB)

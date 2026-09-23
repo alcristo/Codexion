@@ -38,8 +38,10 @@ void	tell_to_stop(t_sim *sim)
 
 	pthread_mutex_lock(sim->mutex);
 	sim->stop = 1;
-	pthread_cond_broadcast(sim->request_wait);
 	pthread_mutex_unlock(sim->mutex);
+	pthread_mutex_lock(sim->heap->mutex);
+	pthread_cond_broadcast(sim->request_wait);
+	pthread_mutex_unlock(sim->heap->mutex);
 	i = 0;
 	pthread_mutex_lock(sim->logger->mutex);
 	//sim->logger->silence = 1;
@@ -59,16 +61,16 @@ void	*monitor_routine(void *arg)
 	int		i;
 	int		done;
 	t_sim	*sim;
-	long	start;
 	long	elapsed;
 	int		burned_out;
+	//long before;
+	//long after;
 
 	sim = (t_sim *)arg;
 	pthread_mutex_lock(sim->mutex);
 	while (!sim->started && !sim->stop)
 		pthread_cond_wait(sim->start, sim->mutex);
 	//sim->start_time = now();
-	start = sim->start_time;
 	pthread_mutex_unlock(sim->mutex);
 	burned_out = 0;
 	while (1)
@@ -77,18 +79,33 @@ void	*monitor_routine(void *arg)
 		done = 1;
 		while (i < sim->params->num)
 		{
+			//before = now() - sim->start_time;
+			//printf("M %ld before coder lock %d\n", before, sim->coders[i]->id);
 			pthread_mutex_lock(sim->coders[i]->mutex);
+			//after = now() - sim->start_time;
+			//printf("M %ld after coder lock %d (wait=%ld)\n",
+				//after, sim->coders[i]->id, after - before);
 			elapsed = now() - sim->start_time - sim->coders[i]->last_compile;
 			if (elapsed >= sim->params->time_burnout)
 			{
+				//before = now() - sim->start_time;
+				//printf("M %ld before coder unlock %d\n", before, sim->coders[i]->id);
 				pthread_mutex_unlock(sim->coders[i]->mutex);
+				//after = now() - sim->start_time;
+				//printf("M %ld after coder lock %d (wait=%ld)\n",
+					//after, sim->coders[i]->id, after - before);
 				burnout(sim->coders[i]);
 				burned_out = 1;
 				break ;
 			}
 			if (sim->coders[i]->times < sim->params->required)
 				done = 0;
+			//before = now() - sim->start_time;
+			//printf("M %ld before coder unlock %d\n", before, sim->coders[i]->id);
 			pthread_mutex_unlock(sim->coders[i]->mutex);
+			//after = now() - sim->start_time;
+			//printf("M %ld after coder lock %d (wait=%ld)\n",
+			//	after, sim->coders[i]->id, after - before);
 			i++;
 		}
 		if (done || burned_out)
@@ -170,27 +187,17 @@ void	director_routine(t_sim *sim)
 {
 	t_coder	*coder;
 
+	pthread_mutex_lock(sim->heap->mutex);
 	while (!sim_should_stop(sim))
 	{
-		pthread_mutex_lock(sim->heap->mutex);
-		while (!sim->heap->size)
-		{
-			pthread_mutex_unlock(sim->heap->mutex);
-			if (sim_should_stop(sim))
-				return ;
-			pthread_mutex_lock(sim->heap->mutex);
+		while (!sim->heap->size && !sim_should_stop(sim))
 			pthread_cond_wait(sim->request_wait, sim->heap->mutex);
-		}
 		if (sim_should_stop(sim))
-		{
-			pthread_mutex_unlock(sim->heap->mutex);
 			break ;
-		}
 		coder = sim->heap->nodes[0]->coder;
 		grant_permission(sim, coder);
-		//printf("grant %d at %ld\n", coder->id, now() - sim->start_time);
-		pthread_mutex_unlock(sim->heap->mutex);
 	}
+	pthread_mutex_unlock(sim->heap->mutex);
 }
 
 pthread_t	*create_threads(t_sim *sim)

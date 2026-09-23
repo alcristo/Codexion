@@ -26,6 +26,11 @@ void	free_coder(t_coder *coder)
 		pthread_mutex_destroy(coder->go);
 		free(coder->go);
 	}
+	if (coder->mood)
+	{
+		pthread_mutex_destroy(coder->mood);
+		free(coder->mood);
+	}
 	if (coder->wait)
 	{
 		pthread_cond_destroy(coder->wait);
@@ -75,13 +80,15 @@ t_coder	*init_coder(size_t i)
 	init_null(coder);
 	coder->mutex = malloc(sizeof(pthread_mutex_t));
 	coder->go = malloc(sizeof(pthread_mutex_t));
-	if (!coder->mutex || !coder->go)
+	coder->mood = malloc(sizeof(pthread_mutex_t));
+	if (!coder->mutex || !coder->go || !coder->mood)
 		return (free_coder(coder), NULL);
 	coder->wait = malloc(sizeof(pthread_cond_t));
 	if (!coder->wait)
 		return (free_coder(coder), NULL);
 	pthread_mutex_init(coder->mutex, NULL);
 	pthread_mutex_init(coder->go, NULL);
+	pthread_mutex_init(coder->mood, NULL);
 	pthread_cond_init(coder->wait, NULL);
 	return (coder);
 }

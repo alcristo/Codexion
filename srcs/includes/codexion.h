@@ -19,6 +19,7 @@
 # include <sys/time.h>
 # include <pthread.h>
 # include <limits.h>
+# include <errno.h>
 
 typedef struct s_sim	t_sim;
 
@@ -78,6 +79,7 @@ typedef struct s_coder
 	t_dongle		*left;
 	t_dongle		*right;
 	pthread_mutex_t	*mutex;
+	pthread_mutex_t	*mood;
 	pthread_mutex_t	*go;
 	pthread_cond_t	*wait;
 	t_sim			*sim;
@@ -88,6 +90,7 @@ typedef struct s_heap_node
 	t_coder	*coder;
 	long	deadline;
 	int		times;
+	size_t	request_seq;
 }	t_heap_node;
 
 typedef struct s_heap
@@ -95,6 +98,7 @@ typedef struct s_heap
 	t_heap_node		**nodes;
 	size_t			size;
 	size_t			capacity;
+	size_t			requests;
 	t_scheduler		mode;
 	pthread_mutex_t	*mutex;
 	t_sim			*sim;
@@ -110,6 +114,7 @@ typedef struct s_log_node
 {
 	t_coder				*coder;
 	long				time;
+	long				deadline;
 	t_log_op			op;
 	struct s_log_node	*next;
 }	t_log_node;
@@ -136,7 +141,6 @@ typedef struct s_sim
 	int				finished;
 	t_logger		*logger;
 	t_heap			*heap;
-	size_t			request_seq;
 	pthread_mutex_t	*mutex;
 	pthread_cond_t	*start;
 	pthread_cond_t	*request_wait;
@@ -223,6 +227,7 @@ void		send_log(t_coder *coder, t_log_op op, long timestamp);
 void		enqueue_log(t_logger *logger, t_log_node *new);
 //t_log_node	*log_last(t_logger *logger);
 int			print_log(t_logger *logger);
+void		send_burnout_log(t_coder *coder, long time, long deadline);
 
 // Other
 

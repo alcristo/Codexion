@@ -27,5 +27,5 @@ void	ft_sleep(long time)
 
 	start_time = now();
 	while (now() - start_time < time)
-		usleep(10);
+		usleep(250);
 }

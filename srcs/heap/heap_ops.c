@@ -21,7 +21,7 @@ static int	heap_before(t_heap_node *a, t_heap_node *b)
 		if ((a->coder->id % 2) != (b->coder->id % 2))
 			return (a->coder->id % 2 == 0);
 	}
-	return (a->coder->id < b->coder->id);
+	return (a->request_seq < b->request_seq);
 }
 
 void	ft_swap(t_heap_node *a, t_heap_node *b)
@@ -81,12 +81,15 @@ void	enqueue(t_heap *heap, t_coder *coder)
 	heap->nodes[size]->coder = coder;
 	pthread_mutex_lock(coder->mutex);
 	heap->nodes[size]->times = coder->times;
+	heap->requests++;
+	heap->nodes[size]->request_seq = heap->requests;
 	if (coder->times == 0)
 		heap->nodes[size]->deadline = coder->sim->params->time_burnout;
 	else
 		heap->nodes[size]->deadline = coder->last_compile
-			+ coder->sim->params->time_burnout
-			+ coder->sim->params->time_compile;
+			+ coder->sim->params->time_burnout;
+	//printf("%lu %d (%ld) sent request (%ld)\n", now() - coder->sim->start_time, coder->id, coder->last_compile, heap->nodes[size]->deadline);
+	fflush(stdout);
 	pthread_mutex_unlock(coder->mutex);
 	heap->size++;
 	if (heap->mode == EDF)
