@@ -1,19 +1,20 @@
 NAME = codexion
 
-SOURCES =	srcs/simulation/main.c \
-			srcs/parsing/parsing.c \
-			srcs/simulation/simulation.c \
-			srcs/simulation/permission.c \
-			srcs/utils/codexion_utils.c \
-			srcs/coder/init_coders.c \
-			srcs/coder/coder_actions.c \
-			srcs/dongle/init_dongles.c \
-			srcs/dongle/dongle_actions.c \
-			srcs/heap/init_heap.c \
-			srcs/heap/tiebreaker.c \
-			srcs/heap/heap_ops.c \
-			srcs/logger/init_logger.c \
-			srcs/logger/log_ops.c \
+SOURCES =	srcs/coder_actions.c \
+			srcs/dongle_actions.c \
+			srcs/heap_ops.c \
+			srcs/heap_utils.c \
+			srcs/init_coders.c \
+			srcs/init_heap.c \
+			srcs/init_logger.c \
+			srcs/logger_ops.c \
+			srcs/main.c \
+			srcs/parsing.c \
+			srcs/permission.c \
+			srcs/preparatives.c \
+			srcs/routine.c \
+			srcs/simulation.c \
+			srcs/time.c \
 
 OBJECTS = $(SOURCES:.c=.o)
 
