@@ -49,6 +49,7 @@ typedef struct s_node
 {
 	t_coder	*coder;
 	long	deadline;
+	long	ready;
 	int		times;
 	int		request;
 }	t_node;
@@ -167,6 +168,7 @@ void		dequeue(t_heap *heap);
 
 //Logger operations
 void		send_log(t_coder *coder, char *action);
+void		send_log_at(t_coder *coder, char *action, long t);
 void		enqueue_log(t_logger *logger, t_log *log);
 void		print_log(t_logger *logger);
 void		clean_logs(t_logger *logger);

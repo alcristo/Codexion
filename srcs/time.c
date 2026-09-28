@@ -17,7 +17,8 @@ long	now(void)
 	struct timeval	tv;
 	long			now;
 
-	gettimeofday(&tv, NULL);
+	if (gettimeofday(&tv, NULL))
+		return (-1);
 	now = tv.tv_sec * 1000000L + tv.tv_usec;
 	return (now);
 }

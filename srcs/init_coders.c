@@ -65,6 +65,24 @@ t_dongle	**create_dongles(t_sim *sim)
 	return (dongles);
 }
 
+static int init_coder_pthreads(t_coder *coder)
+{
+	if (pthread_mutex_init(&coder->mutex, NULL))
+		return (1);
+	if (pthread_mutex_init(&coder->go, NULL))
+	{
+		pthread_mutex_destroy(&coder->mutex);
+		return (1);
+	}
+	if (pthread_cond_init(&coder->cond, NULL))
+	{
+		pthread_mutex_destroy(&coder->go);
+		pthread_mutex_destroy(&coder->mutex);
+		return (1);
+	}
+	return (0);
+}
+
 t_coder	**create_coders(t_sim *sim)
 {
 	t_coder	**coders;
@@ -81,12 +99,12 @@ t_coder	**create_coders(t_sim *sim)
 		if (!coders[i])
 			return (free_coders(coders), NULL);
 		memset(coders[i], 0, sizeof(t_coder));
-		if (pthread_mutex_init(&coders[i]->mutex, NULL))
+		if (init_coder_pthreads(coders[i]))
+		{
+			free(coders[i]);
+			coders[i] = NULL;
 			return (free_coders(coders), NULL);
-		if (pthread_mutex_init(&coders[i]->go, NULL))
-			return (free_coders(coders), NULL);
-		if (pthread_cond_init(&coders[i]->cond, NULL))
-			return (free_coders(coders), NULL);
+		}
 		coders[i]->id = i + 1;
 		coders[i]->sim = sim;
 		i++;

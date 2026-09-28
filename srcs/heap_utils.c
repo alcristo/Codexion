@@ -31,6 +31,6 @@ int	heap_before(t_node *a, t_node *b, int mode)
 		return (a->times < b->times);
 	if ((a->coder->id % 2) != (b->coder->id % 2))
 		return (a->coder->id % 2 == 0);
-	/*return (a->coder->id > b->coder->id);*/
 	return (a->request < b->request);
+	//return (a->ready < b->ready);
 }

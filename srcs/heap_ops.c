@@ -39,9 +39,9 @@ void	heap_down(t_heap *heap, int index)
 
 	if (!heap->size)
 		return ;
-	best = index;
 	while (1)
 	{
+		best = index;
 		child1 = 2 * index + 1;
 		child2 = 2 * index + 2;
 		if (child1 < heap->size
@@ -62,13 +62,18 @@ int	enqueue(t_heap *heap, t_coder *coder)
 	t_node	*new;
 
 	pthread_mutex_lock(&heap->mutex);
-	if (heap->size == heap->capacity)
+	while (heap->size == heap->capacity && !sim_should_stop(heap->sim))
+		pthread_cond_wait(&heap->cond, &heap->mutex);
+	if (sim_should_stop(heap->sim))
 		return (pthread_mutex_unlock(&heap->mutex), 1);
+	/*if (heap->size == heap->capacity)
+		return (pthread_mutex_unlock(&heap->mutex), 1);*/
 	new = heap->nodes[heap->size];
 	pthread_mutex_lock(&coder->mutex);
 	new->coder = coder;
 	new->times = coder->times;
 	new->deadline = coder->deadline;
+	new->ready = now();
 	pthread_mutex_unlock(&coder->mutex);
 	new->request = heap->total_requests;
 	heap->total_requests++;
@@ -81,21 +86,12 @@ int	enqueue(t_heap *heap, t_coder *coder)
 
 void	dequeue(t_heap *heap)
 {
-	pthread_mutex_lock(&heap->mutex);
+	//pthread_mutex_lock(&heap->mutex);
 	if (heap->size == 0)
 	{
-		pthread_mutex_unlock(&heap->mutex);
+		//pthread_mutex_unlock(&heap->mutex);
 		return ;
 	}
-	/*else if (heap->size == 1)
-	{
-		heap->size--;
-		pthread_mutex_unlock(&heap->mutex);
-		return ;
-	}
-	heap->size--;
-	swap_requests(heap->nodes[0], heap->nodes[heap->size - 1]);
-	heap_down(heap, 0);*/
 	heap->size--;
 	if (heap->size > 0)
 	{
@@ -103,5 +99,5 @@ void	dequeue(t_heap *heap)
 		heap_down(heap, 0);
 	}
 	pthread_cond_broadcast(&heap->cond);
-	pthread_mutex_unlock(&heap->mutex);
+	//pthread_mutex_unlock(&heap->mutex);
 }

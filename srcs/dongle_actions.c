@@ -42,8 +42,6 @@ void	grab_dongles(t_coder *coder, t_dongle **dongles)
 	coder->left = dongles[i];
 	coder->right = dongles[(i + 1) % n];
 	pthread_mutex_unlock(&coder->mutex);
-	send_log(coder, "take");
-	send_log(coder, "take");
 }
 
 void	release_dongles(t_coder *coder)

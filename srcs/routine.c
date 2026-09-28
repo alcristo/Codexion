@@ -15,20 +15,20 @@
 void	*coder_routine(void *arg)
 {
 	t_coder	*coder;
-	int		compiled;
 
 	coder = (t_coder *)arg;
 	pthread_mutex_lock(&coder->sim->mutex);
 	while (!coder->sim->started && !coder->sim->stop)
 		pthread_cond_wait(&coder->sim->cond, &coder->sim->mutex);
 	pthread_mutex_unlock(&coder->sim->mutex);
+	//if (send_request(coder))
+	//	return (NULL);
 	while (!sim_should_stop(coder->sim))
 	{
 		if (send_request(coder))
-			continue ;
-		compiled = compile(coder);
-		if (compiled)
 			break ;
+		if (compile(coder))
+			continue ;
 		if (sim_should_stop(coder->sim))
 			break ;
 		program(coder);
@@ -47,13 +47,12 @@ void	*monitor_routine(void *arg)
 	pthread_mutex_unlock(&sim->mutex);
 	while (!sim_should_stop(sim))
 	{
-		//printf("Monitor is checking status\n");
 		if (check_status(sim->coders))
 		{
 			tell_to_stop(sim);
 			break ;
 		}
-		usleep(500);
+		usleep(50);
 	}
 	return (NULL);
 }
@@ -67,7 +66,10 @@ void	*waiter_routine(void *arg)
 	while (!sim->started && !sim->stop)
 		pthread_cond_wait(&sim->cond, &sim->mutex);
 	pthread_mutex_unlock(&sim->mutex);
-	/*while (!sim_should_stop(sim))
+	if (sim->number == 1)
+		return (NULL);
+	usleep(100);
+	while (!sim_should_stop(sim))
 	{
 		pthread_mutex_lock(&sim->heap->mutex);
 		while (!sim->heap->size && !sim_should_stop(sim))
@@ -76,35 +78,9 @@ void	*waiter_routine(void *arg)
 		if (sim_should_stop(sim))
 			break ;
 		attend_request(sim);
-	}*/
-	while (!sim_should_stop(sim))
-	{
-		usleep(100);
-		attend_request(sim);
 	}
 	return (NULL);
 }
-
-/*void	*cooler_routine(void *arg)
-{
-	t_sim		*sim;
-	t_dongle	**dongles;
-	long		timestamp;
-
-	sim = (t_sim *)arg;
-	dongles = sim->dongles;
-	pthread_mutex_lock(&sim->mutex);
-	while (!sim->started && !sim->stop)
-		pthread_cond_wait(&sim->cond, &sim->mutex);
-	pthread_mutex_unlock(&sim->mutex);
-	while (!sim_should_stop(sim))
-	{
-		timestamp = now();
-		usleep(500);
-		cool_dongles(dongles, timestamp);
-	}
-	return (NULL);
-}*/
 
 void	*logger_routine(void *arg)
 {
@@ -115,10 +91,16 @@ void	*logger_routine(void *arg)
 	while (!logger->sim->started && !logger->sim->stop)
 		pthread_cond_wait(&logger->sim->cond, &logger->sim->mutex);
 	pthread_mutex_unlock(&logger->sim->mutex);
-	while (!sim_should_stop(logger->sim))
+	while (1)
 	{
 		pthread_mutex_lock(&logger->mutex);
-		pthread_cond_wait(&logger->cond, &logger->mutex);
+		while (!logger->logs && !sim_should_stop(logger->sim))
+			pthread_cond_wait(&logger->cond, &logger->mutex);
+		if (!logger->logs && sim_should_stop(logger->sim))
+		{
+			pthread_mutex_unlock(&logger->mutex);
+			break ;
+		}
 		pthread_mutex_unlock(&logger->mutex);
 		print_log(logger);
 	}

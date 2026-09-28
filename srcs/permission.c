@@ -12,22 +12,41 @@
 
 #include "codexion.h"
 
-static void	permission_granted(t_sim *sim, int i)
+static void	permission_granted(t_sim *sim, t_coder *coder)
 {
-	t_coder	*coder;
+	int		i;
 	int		n;
+	long	deadline;
 
 	n = sim->number;
-	coder = sim->coders[i];
+	i = (n + coder->id - 1) % n;
+	/*if (!sim->heap->size || sim->heap->nodes[0]->coder != coder)
+	{
+		pthread_mutex_unlock(&sim->dongles[i]->mutex);
+		pthread_mutex_unlock(&sim->dongles[(i + 1) % n]->mutex);
+		//pthread_mutex_unlock(&sim->heap->mutex);
+		return ;
+	}*/
 	sim->dongles[i]->reserved = 1;
-	pthread_mutex_unlock(&sim->dongles[i]->mutex);
 	sim->dongles[(i + 1) % n]->reserved = 1;
+	pthread_mutex_unlock(&sim->dongles[i]->mutex);
 	pthread_mutex_unlock(&sim->dongles[(i + 1) % n]->mutex);
+	//pthread_mutex_unlock(&sim->heap->mutex);
+	send_log(coder, "take");
+	send_log(coder, "take");
+	pthread_mutex_lock(&coder->mutex);
+	deadline = coder->deadline;
+	pthread_mutex_unlock(&coder->mutex);
 	pthread_mutex_lock(&coder->go);
-	coder->permission = 1;
+	/*printf("GRANT coder=%d now=%ld deadline=%ld times=%d\n",
+		coder->id,
+		now(),
+		coder->deadline,
+		coder->times);*/
+	if (now() < deadline)
+		coder->permission = 1;
 	pthread_cond_broadcast(&coder->cond);
 	pthread_mutex_unlock(&coder->go);
-	dequeue(sim->heap);
 }
 
 static int	check_dongles(t_sim *sim, int i)
@@ -54,7 +73,7 @@ static int	check_dongles(t_sim *sim, int i)
 
 void	attend_request(t_sim *sim)
 {
-	t_node	*first;
+	t_coder	*coder;
 	int		i;
 	int		n;
 
@@ -71,13 +90,22 @@ void	attend_request(t_sim *sim)
 		pthread_mutex_unlock(&sim->heap->mutex);
 		return ;
 	}
-	first = sim->heap->nodes[0];
-	n = sim->number;
-	i = (n + first->coder->id - 1) % n;
+	coder = sim->heap->nodes[0]->coder;
+	dequeue(sim->heap);
+	/*printf("WAITER picked coder=%d deadline=%ld now=%ld\n",
+		coder->id,
+		coder->deadline,
+		now());*/
 	pthread_mutex_unlock(&sim->heap->mutex);
+	n = sim->number;
+	i = (n + coder->id - 1) % n;
+	//printf("BEFORE DONGLES coder=%d t=%ld\n", coder->id, now());
 	lock_order(sim->dongles, i, n);
+	//printf("AFTER DONGLES coder=%d t=%ld\n", coder->id, now());
 	if (!check_dongles(sim, i))
-		return (permission_granted(sim, i));
+		return (permission_granted(sim, coder));
+	//printf("WAITING coder=%d\n", coder->id);
 	pthread_mutex_unlock(&sim->dongles[i]->mutex);
 	pthread_mutex_unlock(&sim->dongles[(i + 1) % n]->mutex);
+	enqueue(sim->heap, coder);
 }
