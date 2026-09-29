@@ -25,12 +25,17 @@ int	heap_before(t_node *a, t_node *b, int mode)
 {
 	if (!mode)
 		return (a->request < b->request);
+	if (a->request_id != b->request_id)
+		return (a->request_id < b->request_id);
 	if (a->deadline != b->deadline)
 		return (a->deadline < b->deadline);
 	if (a->times != b->times)
 		return (a->times < b->times);
 	if ((a->coder->id % 2) != (b->coder->id % 2))
 		return (a->coder->id % 2 == 0);
-	return (a->request < b->request);
+	return (a->coder->id > b->coder->id);
+	/*if (a->deadline == b->deadline)
+		return (a->coder->id > b->coder->id);
+	return (a->deadline < b->deadline);*/
 	//return (a->ready < b->ready);
 }

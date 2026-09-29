@@ -52,6 +52,7 @@ typedef struct s_node
 	long	ready;
 	int		times;
 	int		request;
+	int		request_id;
 }	t_node;
 
 typedef struct s_heap
@@ -149,7 +150,7 @@ void		*waiter_routine(void *arg);
 void		*logger_routine(void *arg);
 
 // Coder actions
-int			send_request(t_coder *coder);
+int			send_request(t_coder *coder, int requests);
 int			compile(t_coder *coder);
 void		program(t_coder *coder);
 
@@ -163,7 +164,7 @@ void		swap_requests(t_node *a, t_node *b);
 int			heap_before(t_node *a, t_node *b, int mode);
 void		heap_up(t_heap *heap, int index);
 void		heap_down(t_heap *heap, int index);
-int			enqueue(t_heap *heap, t_coder *coder);
+int			enqueue(t_heap *heap, t_coder *coder, int requests);
 void		dequeue(t_heap *heap);
 
 //Logger operations

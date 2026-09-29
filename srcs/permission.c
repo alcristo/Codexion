@@ -76,6 +76,7 @@ void	attend_request(t_sim *sim)
 	t_coder	*coder;
 	int		i;
 	int		n;
+	int		req;
 
 	if (sim->number == 1)
 	{
@@ -91,6 +92,7 @@ void	attend_request(t_sim *sim)
 		return ;
 	}
 	coder = sim->heap->nodes[0]->coder;
+	req = sim->heap->nodes[0]->request_id;
 	dequeue(sim->heap);
 	/*printf("WAITER picked coder=%d deadline=%ld now=%ld\n",
 		coder->id,
@@ -107,5 +109,5 @@ void	attend_request(t_sim *sim)
 	//printf("WAITING coder=%d\n", coder->id);
 	pthread_mutex_unlock(&sim->dongles[i]->mutex);
 	pthread_mutex_unlock(&sim->dongles[(i + 1) % n]->mutex);
-	enqueue(sim->heap, coder);
+	enqueue(sim->heap, coder, req + 1);
 }

@@ -15,6 +15,7 @@
 void	*coder_routine(void *arg)
 {
 	t_coder	*coder;
+	int		requests;
 
 	coder = (t_coder *)arg;
 	pthread_mutex_lock(&coder->sim->mutex);
@@ -23,12 +24,15 @@ void	*coder_routine(void *arg)
 	pthread_mutex_unlock(&coder->sim->mutex);
 	//if (send_request(coder))
 	//	return (NULL);
+	requests = 0;
 	while (!sim_should_stop(coder->sim))
 	{
-		if (send_request(coder))
+		if (send_request(coder, requests))
 			break ;
+		requests++;
 		if (compile(coder))
 			continue ;
+		requests = 0;
 		if (sim_should_stop(coder->sim))
 			break ;
 		program(coder);

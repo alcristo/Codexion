@@ -12,11 +12,11 @@
 
 #include "codexion.h"
 
-int	send_request(t_coder *coder)
+int	send_request(t_coder *coder, int requests)
 {
-	//printf("REQUEST coder %d\n", coder->id);
-	if (enqueue(coder->sim->heap, coder))
+	if (enqueue(coder->sim->heap, coder, requests))
 		return (1);
+	//printf("REQUEST coder=%d deadline=%ld\n", coder->id, coder->deadline);
 	return (0);
 }
 
@@ -42,6 +42,11 @@ int	check_status(t_coder **coders)
 			done = 0;
 			if (t >= coders[i]->deadline)
 			{
+				/*printf("BURNOUT t=%ld coder=%d deadline=%ld times=%d\n",
+					t,
+					coders[i]->id,
+					coders[i]->deadline,
+					coders[i]->times);*/
 				pthread_mutex_unlock(&coders[i]->mutex);
 				return (send_log_at(coders[i], "burnout", t), i + 1);
 			}

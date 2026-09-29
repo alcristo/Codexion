@@ -57,7 +57,7 @@ void	heap_down(t_heap *heap, int index)
 	}
 }
 
-int	enqueue(t_heap *heap, t_coder *coder)
+int	enqueue(t_heap *heap, t_coder *coder, int requests)
 {
 	t_node	*new;
 
@@ -75,6 +75,7 @@ int	enqueue(t_heap *heap, t_coder *coder)
 	new->deadline = coder->deadline;
 	new->ready = now();
 	pthread_mutex_unlock(&coder->mutex);
+	new->request_id = requests;
 	new->request = heap->total_requests;
 	heap->total_requests++;
 	heap->size++;
