@@ -36,9 +36,9 @@ void	*coder_routine(void *arg)
 			break ;
 		requests++;
 		compiled = compile(coder);
-		if (compiled > 0)
-			continue ;
-		else if (compiled < 0)
+//		if (compiled > 0)
+//			continue ;
+		if (compiled < 0)
 			break ;
 		requests = 0;
 		if (sim_should_stop(coder->sim))

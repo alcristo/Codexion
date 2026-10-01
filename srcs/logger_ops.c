@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-static void	write_message(t_log *log)
+static void	write_message(t_log *log, int silence)
 {
 	int		color[2];
 	char	*action;
@@ -32,8 +32,9 @@ static void	write_message(t_log *log)
 		return ;
 	color[0] = log->id % 8 + 8;
 	color[1] = (log->id + 4) % 8 + 8;
-	printf("%ld \x1b[38;5;%dm%d\x1b[39m %s\n",
-		log->timestamp, color[0], log->id, action);
+	if (silence < 0)
+		printf("%ld \x1b[38;5;%dm%d\x1b[39m %s\n",
+			log->timestamp, color[0], log->id, action);
 }
 
 void	print_log(t_logger *logger)
@@ -48,14 +49,11 @@ void	print_log(t_logger *logger)
 	while (logs)
 	{
 		next = logs->next;
-		if (!logger->silence)
+		write_message(logs, logger->silence);
+		if (!strcmp(logs->action, "burnout"))
 		{
-			write_message(logs);
-			if (!strcmp(logs->action, "burnout"))
-			{
-				logger->silence++;
-				return ;
-			}
+			logger->silence++;
+			return ;
 		}
 		free(logs);
 		logs = next;

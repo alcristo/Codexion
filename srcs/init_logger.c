@@ -49,5 +49,6 @@ t_logger	*create_logger(t_sim *sim)
 	if (pthread_cond_init(&logger->cond, NULL))
 		return (free_logger(logger), NULL);
 	logger->sim = sim;
+	logger->silence = -1;
 	return (logger);
 }

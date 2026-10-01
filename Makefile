@@ -19,7 +19,7 @@ SOURCES =	srcs/coder_actions.c \
 OBJECTS = $(SOURCES:.c=.o)
 
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -pthread  -g -fsanitize=thread
+CFLAGS = -Wall -Wextra -Werror -pthread -g# -fsanitize=thread
 RM = rm -f
 
 %.o:%.c
