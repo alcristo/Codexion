@@ -103,7 +103,6 @@ void	*logger_routine(void *arg)
 	t_logger	*logger;
 
 	logger = (t_logger *)arg;
-	return (NULL);
 	pthread_mutex_lock(&logger->sim->mutex);
 	while (!logger->sim->started && !logger->sim->stop)
 		pthread_cond_wait(&logger->sim->cond, &logger->sim->mutex);

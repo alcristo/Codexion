@@ -12,35 +12,7 @@
 
 #include "codexion.h"
 
-void	write_message(t_coder *coder, char *action)
-{
-	static int	i = 0;
-	int		color[2];
-	char	*sentence;
-
-	memset(&sentence, 0, sizeof(char *));
-	pthread_mutex_lock(&coder->sim->logger->mutex);
-	if (!strcmp("take", action))
-		sentence = "has taken a dongle";
-	else if (!strcmp("compile", action))
-		sentence = "is compiling";
-	else if (!strcmp("debug", action))
-		sentence = "is debugging";
-	else if (!strcmp("refactor", action))
-		sentence = "is refactoring";
-	else if (!strcmp("burnout", action))
-		sentence = "burned out";
-	else
-		return ;
-	color[0] = coder->id % 8 + 8;
-	color[1] = (coder->id + 4) % 8 + 8;
-	i++;
-	printf("i = %d | %ld \x1b[38;5;%dm%d\x1b[39m %s\n",
-		i, (now() - coder->sim->start_time) / 1000, color[0], coder->id, sentence);
-	pthread_mutex_unlock(&coder->sim->logger->mutex);
-}
-
-/*static void	write_message(t_log *log, int i)
+static void	write_message(t_log *log)
 {
 	int		color[2];
 	char	*action;
@@ -60,15 +32,14 @@ void	write_message(t_coder *coder, char *action)
 		return ;
 	color[0] = log->id % 8 + 8;
 	color[1] = (log->id + 4) % 8 + 8;
-	printf("i=%d | %ld \x1b[38;5;%dm%d\x1b[39m %s\n",
-		i, log->timestamp, color[0], log->id, action);
-}*/
+	printf("%ld \x1b[38;5;%dm%d\x1b[39m %s\n",
+		log->timestamp, color[0], log->id, action);
+}
 
 void	print_log(t_logger *logger)
 {
 	t_log	*logs;
 	t_log	*next;
-	static int		i = 0;
 
 	pthread_mutex_lock(&logger->mutex);
 	logs = logger->logs;
@@ -79,20 +50,22 @@ void	print_log(t_logger *logger)
 		next = logs->next;
 		if (!logger->silence)
 		{
-			//write_message(logs, i);
-			i++;
+			write_message(logs);
 			if (!strcmp(logs->action, "burnout"))
+			{
 				logger->silence++;
+				return ;
+			}
 		}
 		free(logs);
 		logs = next;
 	}
-	/*while (logs)
+	while (logs)
 	{
 		next = logs->next;
 		free(logs);
 		logs = next;
-	}*/
+	}
 }
 
 void	enqueue_log(t_logger *logger, t_log *log)

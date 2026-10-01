@@ -14,11 +14,16 @@
 
 static void	free_sim(t_sim *sim)
 {
+	if (sim->coders)
+		free_coders(sim->coders);
 	if (sim->dongles)
 		free_dongles(sim->dongles);
 	if (sim->heap)
 		free_heap(sim->heap);
+	if (sim->logger)
+		free_logger(sim->logger);
 	pthread_mutex_destroy(&sim->mutex);
+	//pthread_mutex_destroy(&sim->resource_mutex);
 	pthread_cond_destroy(&sim->cond);
 	free(sim);
 }
@@ -38,26 +43,24 @@ static void	init_params(t_sim *sim, char **argv)
 
 static int	init_sim(t_sim *sim)
 {
-	int	i;
-
 	if (pthread_mutex_init(&sim->mutex, NULL))
 		return (0);
+	//if (pthread_mutex_init(&sim->resource_mutex, NULL))
+	//	return (0);
 	if (pthread_cond_init(&sim->cond, NULL))
 		return (0);
-	sim->dongles = malloc(sim->number * sizeof(pthread_mutex_t));
+	sim->coders = create_coders(sim);
+	if (!sim->coders)
+		return (0);
+	sim->dongles = create_dongles(sim);
 	if (!sim->dongles)
 		return (0);
-	i = 0;
-	while (i < sim->number)
-	{
-		if (pthread_mutex_init(&sim->dongles[i], NULL))
-			return (0);
-		i++;
-	}
 	sim->heap = create_heap(sim);
 	if (!sim->heap)
 		return (0);
-	if (create_coders)
+	sim->logger = create_logger(sim);
+	if (!sim->logger)
+		return (0);
 	return (1);
 }
 

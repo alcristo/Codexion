@@ -50,8 +50,7 @@ int	check_status(t_coder **coders)
         		    coders[i]->id, t, coders[i]->deadline);*/
 				pthread_mutex_unlock(&coders[i]->mutex);
 				//return (send_log_at(coders[i], "burnout", t), tell_to_stop(coders[i]->sim), -1);
-				//return (send_log_at(coders[i], "burnout", t), -1);
-				return (write_message(coders[i], "burnout"), -1);
+				return (send_log_at(coders[i], "burnout", t), -1);
 			}
 		}
 		pthread_mutex_unlock(&coders[i]->mutex);
@@ -101,7 +100,7 @@ int	compile(t_coder *coder)
 	grab_dongles(coder, coder->sim->dongles);
 	if (coder->left && coder->right)
 	{
-		write_message(coder, "compile");
+		send_log(coder, "compile");
 		pthread_mutex_lock(&coder->mutex);
 		coder->deadline = now() + coder->sim->time_burnout;
 		pthread_mutex_unlock(&coder->mutex);
@@ -119,10 +118,10 @@ int	compile(t_coder *coder)
 
 void	program(t_coder *coder)
 {
-	write_message(coder, "debug");
+	send_log(coder, "debug");
 	ft_sleep(coder->sim, coder->sim->time_debug);
 	if (sim_should_stop(coder->sim))
 		return ;
-	write_message(coder, "refactor");
+	send_log(coder, "refactor");
 	ft_sleep(coder->sim, coder->sim->time_refactor);
 }

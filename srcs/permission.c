@@ -32,8 +32,8 @@ static void	permission_granted(t_sim *sim, t_coder *coder)
 	pthread_mutex_unlock(&sim->dongles[i]->mutex);
 	pthread_mutex_unlock(&sim->dongles[(i + 1) % n]->mutex);
 	//pthread_mutex_unlock(&sim->resource_mutex);
-	write_message(coder, "take");
-	write_message(coder, "take");
+	send_log(coder, "take");
+	send_log(coder, "take");
 	pthread_mutex_lock(&coder->mutex);
 	deadline = coder->deadline;
 	coder->compiling = 1;
