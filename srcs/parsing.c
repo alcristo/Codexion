@@ -63,10 +63,12 @@ int	parse_args(int argc, char **argv)
 	{
 		if (fullnum(argv[i]))
 			return (printf("Invalid positive argument: %s\n", argv[i]), 1);
-		if (ft_atol(argv[i]) == (long)INT_MAX + 1)
+		if (ft_atol(argv[i]) * 1000 >= (long)INT_MAX + 1)
 			return (printf("Invalid integer argument: %s\n", argv[i]), 1);
 	}
 	if (atoi(argv[1]) < 1 || atoi(argv[1]) > 200)
 		return (printf("Invalid number of coders (range: 1-200)\n"), 1);
+	if (!atoi(argv[6]))
+		return (1);
 	return (0);
 }

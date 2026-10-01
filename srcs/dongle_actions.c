@@ -60,8 +60,8 @@ void	release_dongles(t_coder *coder)
 	coder->left = NULL;
 	coder->right = NULL;
 	pthread_mutex_unlock(&coder->mutex);
-	pthread_mutex_lock(&left->mutex);
 	cooldown = now() + coder->sim->cooldown;
+	pthread_mutex_lock(&left->mutex);
 	left->reserved = 0;
 	left->cooldown = cooldown;
 	pthread_mutex_unlock(&left->mutex);
@@ -69,6 +69,12 @@ void	release_dongles(t_coder *coder)
 	right->reserved = 0;
 	right->cooldown = cooldown;
 	pthread_mutex_unlock(&right->mutex);
+	/*pthread_mutex_lock(&coder->sim->resource_mutex);
+	left->reserved = 0;
+	left->cooldown = cooldown;
+	right->reserved = 0;
+	right->cooldown = cooldown;
+	pthread_mutex_unlock(&coder->sim->resource_mutex);*/
 	pthread_mutex_lock(&coder->sim->heap->mutex);
 	pthread_cond_broadcast(&coder->sim->heap->cond);
 	pthread_mutex_unlock(&coder->sim->heap->mutex);

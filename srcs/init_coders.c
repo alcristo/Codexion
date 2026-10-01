@@ -12,20 +12,6 @@
 
 #include "codexion.h"
 
-void	free_dongles(t_dongle **dongles)
-{
-	int	i;
-
-	i = 0;
-	while (dongles[i])
-	{
-		pthread_mutex_destroy(&dongles[i]->mutex);
-		free(dongles[i]);
-		i++;
-	}
-	free(dongles);
-}
-
 void	free_coders(t_coder **coders)
 {
 	int	i;
@@ -42,30 +28,7 @@ void	free_coders(t_coder **coders)
 	free(coders);
 }
 
-t_dongle	**create_dongles(t_sim *sim)
-{
-	t_dongle	**dongles;
-	int			i;
-
-	dongles = malloc((sim->number + 1) * sizeof(t_dongle *));
-	if (!dongles)
-		return (NULL);
-	memset(dongles, 0, (sim->number + 1) * sizeof(t_dongle *));
-	i = 0;
-	while (i < sim->number)
-	{
-		dongles[i] = malloc(sizeof(t_dongle));
-		if (!dongles[i])
-			return (free_dongles(dongles), NULL);
-		memset(dongles[i], 0, sizeof(t_dongle));
-		if (pthread_mutex_init(&dongles[i]->mutex, NULL))
-			return (free_dongles(dongles), NULL);
-		i++;
-	}
-	return (dongles);
-}
-
-static int init_coder_pthreads(t_coder *coder)
+static int	init_coder_pthreads(t_coder *coder)
 {
 	if (pthread_mutex_init(&coder->mutex, NULL))
 		return (1);

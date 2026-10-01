@@ -49,14 +49,14 @@ void	start(t_sim *sim)
 	pthread_mutex_lock(&sim->mutex);
 	if (gettimeofday(&tv, NULL))
 		return (pthread_mutex_unlock(&sim->mutex), threads_failure(sim));
-	sim->start_time = (long)(tv.tv_sec * 1000000L + tv.tv_usec);
 	i = 0;
-	while (sim->coders[i])
+	/*while (sim->coders[i])
 	{
 		sim->coders[i]->deadline = sim->start_time + sim->time_burnout;
 		i++;
-	}
+	}*/
 	sim->started++;
+	sim->start_time = (long)(tv.tv_sec * 1000000L + tv.tv_usec);
 	pthread_cond_broadcast(&sim->cond);
 	pthread_mutex_unlock(&sim->mutex);
 }

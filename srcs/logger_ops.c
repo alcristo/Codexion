@@ -12,8 +12,37 @@
 
 #include "codexion.h"
 
-static void	write_message(t_log *log)
+void	write_message(t_coder *coder, char *action)
 {
+	static int	i = 0;
+	int		color[2];
+	char	*sentence;
+
+	memset(&sentence, 0, sizeof(char *));
+	pthread_mutex_lock(&coder->sim->logger->mutex);
+	if (!strcmp("take", action))
+		sentence = "has taken a dongle";
+	else if (!strcmp("compile", action))
+		sentence = "is compiling";
+	else if (!strcmp("debug", action))
+		sentence = "is debugging";
+	else if (!strcmp("refactor", action))
+		sentence = "is refactoring";
+	else if (!strcmp("burnout", action))
+		sentence = "burned out";
+	else
+		return ;
+	color[0] = coder->id % 8 + 8;
+	color[1] = (coder->id + 4) % 8 + 8;
+	i++;
+	printf("i = %d | %ld \x1b[38;5;%dm%d\x1b[39m %s\n",
+		i, (now() - coder->sim->start_time) / 1000, color[0], coder->id, sentence);
+	pthread_mutex_unlock(&coder->sim->logger->mutex);
+}
+
+/*static void	write_message(t_log *log, int i)
+{
+	int		color[2];
 	char	*action;
 
 	memset(&action, 0, sizeof(char *));
@@ -29,13 +58,17 @@ static void	write_message(t_log *log)
 		action = "burned out";
 	else
 		return ;
-	printf("%ld %d %s\n", log->timestamp, log->id, action);
-}
+	color[0] = log->id % 8 + 8;
+	color[1] = (log->id + 4) % 8 + 8;
+	printf("i=%d | %ld \x1b[38;5;%dm%d\x1b[39m %s\n",
+		i, log->timestamp, color[0], log->id, action);
+}*/
 
 void	print_log(t_logger *logger)
 {
 	t_log	*logs;
 	t_log	*next;
+	static int		i = 0;
 
 	pthread_mutex_lock(&logger->mutex);
 	logs = logger->logs;
@@ -46,13 +79,20 @@ void	print_log(t_logger *logger)
 		next = logs->next;
 		if (!logger->silence)
 		{
-			write_message(logs);
+			//write_message(logs, i);
+			i++;
 			if (!strcmp(logs->action, "burnout"))
 				logger->silence++;
 		}
 		free(logs);
 		logs = next;
 	}
+	/*while (logs)
+	{
+		next = logs->next;
+		free(logs);
+		logs = next;
+	}*/
 }
 
 void	enqueue_log(t_logger *logger, t_log *log)
@@ -61,18 +101,14 @@ void	enqueue_log(t_logger *logger, t_log *log)
 
 	if (!log)
 		return ;
-	pthread_mutex_lock(&logger->mutex);
 	if (!logger->logs || log->timestamp < logger->logs->timestamp)
 	{
 		log->next = logger->logs;
 		logger->logs = log;
 	}
-	//if (!logger->logs)
-	//	logger->logs = log;
 	else
 	{
 		current = logger->logs;
-		//while (current->next)
 		while (current->next && current->next->timestamp <= log->timestamp)
 			current = current->next;
 		log->next = current->next;
@@ -93,6 +129,7 @@ void	send_log_at(t_coder *coder, char *action, long t)
 	log->id = coder->id;
 	log->action = action;
 	log->timestamp = (t - coder->sim->start_time) / 1000;
+	pthread_mutex_lock(&coder->sim->logger->mutex);
 	enqueue_log(coder->sim->logger, log);
 }
 
@@ -107,5 +144,6 @@ void	send_log(t_coder *coder, char *action)
 	log->id = coder->id;
 	log->action = action;
 	log->timestamp = (now() - coder->sim->start_time) / 1000;
+	pthread_mutex_lock(&coder->sim->logger->mutex);
 	enqueue_log(coder->sim->logger, log);
 }

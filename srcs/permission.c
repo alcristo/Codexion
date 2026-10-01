@@ -31,11 +31,12 @@ static void	permission_granted(t_sim *sim, t_coder *coder)
 	sim->dongles[(i + 1) % n]->reserved = 1;
 	pthread_mutex_unlock(&sim->dongles[i]->mutex);
 	pthread_mutex_unlock(&sim->dongles[(i + 1) % n]->mutex);
-	//pthread_mutex_unlock(&sim->heap->mutex);
-	send_log(coder, "take");
-	send_log(coder, "take");
+	//pthread_mutex_unlock(&sim->resource_mutex);
+	write_message(coder, "take");
+	write_message(coder, "take");
 	pthread_mutex_lock(&coder->mutex);
 	deadline = coder->deadline;
+	coder->compiling = 1;
 	pthread_mutex_unlock(&coder->mutex);
 	pthread_mutex_lock(&coder->go);
 	/*printf("GRANT coder=%d now=%ld deadline=%ld times=%d\n",
@@ -111,3 +112,50 @@ void	attend_request(t_sim *sim)
 	pthread_mutex_unlock(&sim->dongles[(i + 1) % n]->mutex);
 	enqueue(sim->heap, coder, req + 1);
 }
+
+/*void	attend_request(t_sim *sim)
+{
+	t_coder	*coder;
+	int		i;
+	int		n;
+	int		req;
+
+	if (sim->number == 1)
+	{
+		pthread_mutex_lock(&sim->heap->mutex);
+		pthread_cond_broadcast(&sim->heap->cond);
+		pthread_mutex_unlock(&sim->heap->mutex);
+		return ;
+	}
+	pthread_mutex_lock(&sim->heap->mutex);
+	if (!sim->heap->size)
+	{
+		pthread_mutex_unlock(&sim->heap->mutex);
+		return ;
+	}
+	coder = sim->heap->nodes[0]->coder;
+	req = sim->heap->nodes[0]->request_id;
+	dequeue(sim->heap);
+	pthread_mutex_unlock(&sim->heap->mutex);
+	printf("WAITER picked coder=%d deadline=%ld now=%ld\n",
+		coder->id,
+		coder->deadline,
+		now());
+	n = sim->number;
+	i = (n + coder->id - 1) % n;
+	//printf("BEFORE DONGLES coder=%d t=%ld\n", coder->id, now());
+	//pthread_mutex_lock(&sim->resource_mutex);
+	printf(
+		"%ld WAITER picked coder=%d deadline=%ld dongles=%d\n",
+		(now() - sim->start_time) / 1000,
+		coder->id,
+		coder->deadline,
+		check_dongles(sim, i)
+	);
+	//printf("AFTER DONGLES coder=%d t=%ld\n", coder->id, now());
+	if (!check_dongles(sim, i))
+		return (permission_granted(sim, coder));
+	//printf("WAITING coder=%d\n", coder->id);
+	pthread_mutex_unlock(&sim->resource_mutex);
+	enqueue(sim->heap, coder, req + 1);
+}*/

@@ -66,17 +66,14 @@ int	enqueue(t_heap *heap, t_coder *coder, int requests)
 		pthread_cond_wait(&heap->cond, &heap->mutex);
 	if (sim_should_stop(heap->sim))
 		return (pthread_mutex_unlock(&heap->mutex), 1);
-	/*if (heap->size == heap->capacity)
-		return (pthread_mutex_unlock(&heap->mutex), 1);*/
 	new = heap->nodes[heap->size];
 	pthread_mutex_lock(&coder->mutex);
 	new->coder = coder;
 	new->times = coder->times;
 	new->deadline = coder->deadline;
-	new->ready = now();
 	pthread_mutex_unlock(&coder->mutex);
 	new->request_id = requests;
-	new->request = heap->total_requests;
+	new->order = heap->total_requests;
 	heap->total_requests++;
 	heap->size++;
 	heap_up(heap, heap->size - 1);

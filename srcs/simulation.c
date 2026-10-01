@@ -44,3 +44,12 @@ void	tell_to_stop(t_sim *sim)
 	pthread_cond_broadcast(&sim->logger->cond);
 	pthread_mutex_unlock(&sim->logger->mutex);
 }
+
+void	ft_sleep(t_sim *sim, int t)
+{
+	long	time;
+
+	time = now() + (long)t;
+	while (!sim_should_stop(sim) && now() < time)
+		usleep(1000);
+}
