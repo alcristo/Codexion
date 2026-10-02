@@ -40,20 +40,18 @@ void	grab_dongles(t_coder *coder, t_dongle **dongles)
 	i = (n + coder->id - 1) % n;
 	pthread_mutex_lock(&coder->mutex);
 	coder->left = dongles[i];
+	write_message(coder, "take");
 	coder->right = dongles[(i + 1) % n];
+	write_message(coder, "take");
 	pthread_mutex_unlock(&coder->mutex);
 }
 
 void	release_dongles(t_coder *coder)
 {
-	int			i;
-	int			n;
 	t_dongle	*left;
 	t_dongle	*right;
 	long		cooldown;
 
-	n = coder->sim->number;
-	i = (n + coder->id - 1) % n;
 	left = coder->left;
 	right = coder->right;
 	pthread_mutex_lock(&coder->mutex);
@@ -69,12 +67,6 @@ void	release_dongles(t_coder *coder)
 	right->reserved = 0;
 	right->cooldown = cooldown;
 	pthread_mutex_unlock(&right->mutex);
-	/*pthread_mutex_lock(&coder->sim->resource_mutex);
-	left->reserved = 0;
-	left->cooldown = cooldown;
-	right->reserved = 0;
-	right->cooldown = cooldown;
-	pthread_mutex_unlock(&coder->sim->resource_mutex);*/
 	pthread_mutex_lock(&coder->sim->heap->mutex);
 	pthread_cond_broadcast(&coder->sim->heap->cond);
 	pthread_mutex_unlock(&coder->sim->heap->mutex);

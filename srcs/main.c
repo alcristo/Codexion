@@ -23,7 +23,7 @@ static void	free_sim(t_sim *sim)
 	if (sim->logger)
 		free_logger(sim->logger);
 	pthread_mutex_destroy(&sim->mutex);
-	//pthread_mutex_destroy(&sim->resource_mutex);
+	pthread_mutex_destroy(&sim->logging);
 	pthread_cond_destroy(&sim->cond);
 	free(sim);
 }
@@ -45,8 +45,8 @@ static int	init_sim(t_sim *sim)
 {
 	if (pthread_mutex_init(&sim->mutex, NULL))
 		return (0);
-	//if (pthread_mutex_init(&sim->resource_mutex, NULL))
-	//	return (0);
+	if (pthread_mutex_init(&sim->logging, NULL))
+		return (0);
 	if (pthread_cond_init(&sim->cond, NULL))
 		return (0);
 	sim->coders = create_coders(sim);

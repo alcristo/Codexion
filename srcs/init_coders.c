@@ -34,9 +34,12 @@ void	free_coders(t_coder **coders)
 	while (coders[i])
 	{
 		coders[i]->sim = NULL;
+		coders[i]->left = NULL;
+		coders[i]->right = NULL;
 		pthread_mutex_destroy(&coders[i]->mutex);
 		pthread_mutex_destroy(&coders[i]->go);
 		pthread_cond_destroy(&coders[i]->cond);
+		free(coders[i]);
 		i++;
 	}
 	free(coders);

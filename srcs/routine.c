@@ -12,11 +12,30 @@
 
 #include "codexion.h"
 
+static void	coder_loop(t_coder *coder)
+{
+	int	requests;
+	int	compiled;
+
+	requests = 0;
+	while (!sim_should_stop(coder->sim))
+	{
+		if (enqueue(coder->sim->heap, coder, requests))
+			break ;
+		requests++;
+		compiled = compile(coder);
+		if (compiled < 0)
+			break ;
+		requests = 0;
+		if (sim_should_stop(coder->sim))
+			break ;
+		program(coder);
+	}
+}
+
 void	*coder_routine(void *arg)
 {
 	t_coder	*coder;
-	int		compiled;
-	int		requests;
 
 	coder = (t_coder *)arg;
 	coder->deadline = LONG_MAX;
@@ -27,24 +46,7 @@ void	*coder_routine(void *arg)
 	pthread_mutex_lock(&coder->mutex);
 	coder->deadline = coder->sim->start_time + coder->sim->time_burnout;
 	pthread_mutex_unlock(&coder->mutex);
-	requests = 0;
-	if (coder->id % 2 == 0)
-		usleep(coder->sim->time_compile / 2);
-	while (!sim_should_stop(coder->sim))
-	{
-		if (send_request(coder, requests))
-			break ;
-		requests++;
-		compiled = compile(coder);
-//		if (compiled > 0)
-//			continue ;
-		if (compiled < 0)
-			break ;
-		requests = 0;
-		if (sim_should_stop(coder->sim))
-			break ;
-		program(coder);
-	}
+	coder_loop(coder);
 	return (NULL);
 }
 
@@ -82,9 +84,10 @@ void	*waiter_routine(void *arg)
 	if (sim->number == 1)
 		return (NULL);
 	pthread_mutex_lock(&sim->heap->mutex);
-	while (!sim_should_stop(sim) && !sim->heap->size)
+	while (!sim_should_stop(sim) && sim->heap->size < sim->heap->capacity)
 		pthread_cond_wait(&sim->heap->cond, &sim->heap->mutex);
 	pthread_mutex_unlock(&sim->heap->mutex);
+	ft_sleep(sim, 100);
 	while (!sim_should_stop(sim))
 	{
 		pthread_mutex_lock(&sim->heap->mutex);
@@ -107,6 +110,7 @@ void	*logger_routine(void *arg)
 	while (!logger->sim->started && !logger->sim->stop)
 		pthread_cond_wait(&logger->sim->cond, &logger->sim->mutex);
 	pthread_mutex_unlock(&logger->sim->mutex);
+	return (NULL);
 	while (1)
 	{
 		pthread_mutex_lock(&logger->mutex);

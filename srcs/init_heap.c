@@ -12,12 +12,6 @@
 
 #include "codexion.h"
 
-/*void	free_node(t_node *node)
-{
-	node->coder = NULL;
-	free(node);
-}*/
-
 static void	free_nodes(t_heap *heap, int n)
 {
 	int	i;
@@ -43,49 +37,42 @@ void	free_heap(t_heap *heap)
 	free(heap);
 }
 
-/*static void	init_nodes(t_heap *heap, int n)
+static int	init_heap(t_heap *heap, t_sim *sim)
 {
 	int	i;
 
-	i = 0;
-	while (i < n)
-	{
-		heap->nodes[i] = malloc(sizeof(t_node));
-		if (!heap->nodes[i])
-			return (free_nodes(heap, i), free_heap(heap));
-		memset(heap->nodes[i], 0, sizeof(t_node));
-		i++;
-	}
-}*/
-
-t_heap	*create_heap(t_sim *sim)
-{
-	t_heap	*heap;
-	int		i;
-
-	heap = malloc(sizeof(t_heap));
-	if (!heap)
-		return (NULL);
-	memset(heap, 0, sizeof(t_heap));
 	if (pthread_mutex_init(&heap->mutex, NULL))
-		return (free_heap(heap), NULL);
+		return (free_heap(heap), 1);
 	if (pthread_cond_init(&heap->cond, NULL))
-		return (free_heap(heap), NULL);
+		return (free_heap(heap), 1);
 	heap->capacity = sim->number;
 	heap->mode = sim->scheduler;
 	heap->sim = sim;
 	heap->nodes = malloc(sim->number * sizeof(t_node *));
 	if (!heap->nodes)
-		return (free_heap(heap), NULL);
+		return (free_heap(heap), 1);
 	memset(heap->nodes, 0, sim->number * sizeof(t_node *));
 	i = 0;
 	while (i < sim->number)
 	{
 		heap->nodes[i] = malloc(sizeof(t_node));
 		if (!heap->nodes[i])
-			return (free_nodes(heap, i), free_heap(heap), NULL);
+			return (free_nodes(heap, i), free_heap(heap), 1);
 		memset(heap->nodes[i], 0, sizeof(t_node));
 		i++;
 	}
+	return (0);
+}
+
+t_heap	*create_heap(t_sim *sim)
+{
+	t_heap	*heap;
+
+	heap = malloc(sizeof(t_heap));
+	if (!heap)
+		return (NULL);
+	memset(heap, 0, sizeof(t_heap));
+	if (init_heap(heap, sim))
+		return (NULL);
 	return (heap);
 }

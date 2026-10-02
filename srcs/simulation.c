@@ -37,7 +37,7 @@ void	tell_to_stop(t_sim *sim)
 	{
 		pthread_mutex_lock(&sim->coders[i]->go);
 		pthread_cond_broadcast(&sim->coders[i]->cond);
-		pthread_mutex_unlock(&sim->coders[i]->go);	
+		pthread_mutex_unlock(&sim->coders[i]->go);
 		i++;
 	}
 	pthread_mutex_lock(&sim->logger->mutex);

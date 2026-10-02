@@ -24,7 +24,7 @@ Condition variables are variables in which threads wait until they're told to co
 
 ```c
 pthread_mutex_lock(&mutex);
-while (variable != "you can go")
+while (variable != "get out of the loop")
     pthread_cond_wait(&cond, &mutex);
 pthread_mutex_unlock(&mutex);
 ```

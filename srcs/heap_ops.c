@@ -70,7 +70,7 @@ int	enqueue(t_heap *heap, t_coder *coder, int requests)
 	pthread_mutex_lock(&coder->mutex);
 	new->coder = coder;
 	new->times = coder->times;
-	new->deadline = coder->deadline;
+	new->deadline = coder->deadline / 1000L;
 	pthread_mutex_unlock(&coder->mutex);
 	new->request_id = requests;
 	new->order = heap->total_requests;
@@ -84,12 +84,8 @@ int	enqueue(t_heap *heap, t_coder *coder, int requests)
 
 void	dequeue(t_heap *heap)
 {
-	//pthread_mutex_lock(&heap->mutex);
 	if (heap->size == 0)
-	{
-		//pthread_mutex_unlock(&heap->mutex);
 		return ;
-	}
 	heap->size--;
 	if (heap->size > 0)
 	{
@@ -97,5 +93,4 @@ void	dequeue(t_heap *heap)
 		heap_down(heap, 0);
 	}
 	pthread_cond_broadcast(&heap->cond);
-	//pthread_mutex_unlock(&heap->mutex);
 }

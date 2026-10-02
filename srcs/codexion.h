@@ -87,7 +87,6 @@ typedef struct s_threads
 {
 	pthread_t	monitor;
 	pthread_t	waiter;
-	//pthread_t	cooler;
 	pthread_t	logger;
 	pthread_t	*coders;
 }	t_threads;
@@ -105,11 +104,13 @@ typedef struct s_sim
 	long			start_time;
 	int				started; // protected by sim->mutex
 	int				stop; // protected by sim->mutex
+	int				silence;
 	t_coder			**coders; // protected by coders[i].mutex
 	t_dongle		**dongles; // protected by dongles[i].mutex
 	t_heap			*heap; // protected by heap.mutex
 	t_logger		*logger; // protected by logger.mutex
 	pthread_mutex_t	mutex;
+	pthread_mutex_t	logging;
 	pthread_cond_t	cond;
 }	t_sim;
 
@@ -172,6 +173,7 @@ void		send_log(t_coder *coder, char *action);
 void		send_log_at(t_coder *coder, char *action, long t);
 void		enqueue_log(t_logger *logger, t_log *log);
 void		print_log(t_logger *logger);
+void		write_message(t_coder *coder, char *doing);
 void		clean_logs(t_logger *logger);
 
 #endif
