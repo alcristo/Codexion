@@ -66,28 +66,10 @@ typedef struct s_heap
 	pthread_cond_t	cond;
 }	t_heap;
 
-/*typedef struct s_log
-{
-	long			timestamp;
-	int				id;
-	char			*action;
-	struct s_log	*next;
-}	t_log;
-
-typedef struct s_logger
-{
-	t_log			*logs;
-	int				silence;
-	t_sim			*sim;
-	pthread_mutex_t	mutex;
-	pthread_cond_t	cond;
-}	t_logger;*/
-
 typedef struct s_threads
 {
 	pthread_t	monitor;
 	pthread_t	waiter;
-	//pthread_t	logger;
 	pthread_t	*coders;
 }	t_threads;
 
@@ -108,7 +90,6 @@ typedef struct s_sim
 	t_coder			**coders; // protected by coders[i].mutex
 	t_dongle		**dongles; // protected by dongles[i].mutex
 	t_heap			*heap; // protected by heap.mutex
-	//t_logger		*logger; // protected by logger.mutex
 	pthread_mutex_t	mutex;
 	pthread_mutex_t	logging;
 	pthread_cond_t	cond;
@@ -121,13 +102,11 @@ int			parse_args(int argc, char **argv);
 t_coder		**create_coders(t_sim *sim);
 t_dongle	**create_dongles(t_sim *sim);
 t_heap		*create_heap(t_sim *sim);
-//t_logger	*create_logger(t_sim *sim);
 
 // Free structs
 void		free_coders(t_coder **coders);
 void		free_dongles(t_dongle **dongles);
 void		free_heap(t_heap *heap);
-//void		free_logger(t_logger *logger);
 
 // Threads
 void		preparatives(t_sim *sim);
@@ -152,7 +131,6 @@ void		*waiter_routine(void *arg);
 void		*logger_routine(void *arg);
 
 // Coder actions
-//int			send_request(t_coder *coder, int requests);
 int			compile(t_coder *coder);
 void		program(t_coder *coder);
 
@@ -170,11 +148,6 @@ int			enqueue(t_heap *heap, t_coder *coder, int requests);
 void		dequeue(t_heap *heap);
 
 //Logger operations
-void		send_log(t_coder *coder, char *action);
-void		send_log_at(t_coder *coder, char *action, long t);
-//void		enqueue_log(t_logger *logger, t_log *log);
-//void		print_log(t_logger *logger);
 void		write_message(t_coder *coder, char *doing);
-//void		clean_logs(t_logger *logger);
 
 #endif

@@ -40,9 +40,6 @@ void	tell_to_stop(t_sim *sim)
 		pthread_mutex_unlock(&sim->coders[i]->go);
 		i++;
 	}
-	/*pthread_mutex_lock(&sim->logger->mutex);
-	pthread_cond_broadcast(&sim->logger->cond);
-	pthread_mutex_unlock(&sim->logger->mutex);*/
 }
 
 void	ft_sleep(t_sim *sim, int t)

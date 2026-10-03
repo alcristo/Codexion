@@ -20,8 +20,6 @@ int	start_threads(t_threads *threads, t_sim *sim)
 		return (1);
 	if (pthread_create(&threads->waiter, NULL, waiter_routine, sim))
 		return (1);
-	//if (pthread_create(&threads->logger, NULL, logger_routine, sim->logger))
-	//	return (1);
 	i = 0;
 	while (i < sim->number)
 	{
@@ -62,7 +60,6 @@ void	join_threads(t_threads *threads, int n)
 
 	pthread_join(threads->monitor, NULL);
 	pthread_join(threads->waiter, NULL);
-	//pthread_join(threads->logger, NULL);
 	i = 0;
 	while (i < n)
 		pthread_join(threads->coders[i++], NULL);

@@ -106,30 +106,3 @@ void	*waiter_routine(void *arg)
 	}
 	return (NULL);
 }
-
-/*void	*logger_routine(void *arg)
-{
-	t_logger	*logger;
-
-	logger = (t_logger *)arg;
-	pthread_mutex_lock(&logger->sim->mutex);
-	while (!logger->sim->started && !logger->sim->stop)
-		pthread_cond_wait(&logger->sim->cond, &logger->sim->mutex);
-	pthread_mutex_unlock(&logger->sim->mutex);
-	return (NULL);
-	while (1)
-	{
-		pthread_mutex_lock(&logger->mutex);
-		while (!logger->logs && !sim_should_stop(logger->sim))
-			pthread_cond_wait(&logger->cond, &logger->mutex);
-		if (!logger->logs && sim_should_stop(logger->sim))
-		{
-			pthread_mutex_unlock(&logger->mutex);
-			break ;
-		}
-		pthread_mutex_unlock(&logger->mutex);
-		print_log(logger);
-	}
-	print_log(logger);
-	return (NULL);
-}*/
