@@ -18,6 +18,12 @@ static void	coder_loop(t_coder *coder)
 	int	compiled;
 
 	requests = 0;
+	pthread_mutex_lock(&coder->sim->mutex);
+	while (!coder->sim->started && !coder->sim->stop)
+		pthread_cond_wait(&coder->sim->cond, &coder->sim->mutex);
+	pthread_mutex_unlock(&coder->sim->mutex);
+	if (coder->id % 2 == 0)
+		ft_sleep(coder->sim, coder->sim->time_compile / 2);
 	while (!sim_should_stop(coder->sim))
 	{
 		if (enqueue(coder->sim->heap, coder, requests))
@@ -101,7 +107,7 @@ void	*waiter_routine(void *arg)
 	return (NULL);
 }
 
-void	*logger_routine(void *arg)
+/*void	*logger_routine(void *arg)
 {
 	t_logger	*logger;
 
@@ -126,4 +132,4 @@ void	*logger_routine(void *arg)
 	}
 	print_log(logger);
 	return (NULL);
-}
+}*/

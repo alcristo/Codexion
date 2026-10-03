@@ -37,9 +37,27 @@
 			log->timestamp, color[0], log->id, action);
 }*/
 
+static char	*get_phrase(char *doing)
+{
+	char	*action;
+
+	memset(&action, 0, sizeof(char *));
+	if (!strcmp("take", doing))
+		action = "\x1b[38;2;255;255;0mhas taken a dongle\x1b[39m";
+	else if (!strcmp("compile", doing))
+		action = "\x1b[38;2;0;255;0mis compiling\x1b[39m";
+	else if (!strcmp("debug", doing))
+		action = "\x1b[38;2;0;255;255mis debugging\x1b[39m";
+	else if (!strcmp("refactor", doing))
+		action = "\x1b[38;2;255;0;255mis refactoring\x1b[39m";
+	else if (!strcmp("burnout", doing))
+		action = "\x1b[38;2;255;0;0mburned out\x1b[39m";
+	return (action);
+}
+
 void	write_message(t_coder *coder, char *doing)
 {
-	int		color[2];
+	int		color;
 	char	*action;
 
 	pthread_mutex_lock(&coder->sim->logging);
@@ -48,29 +66,18 @@ void	write_message(t_coder *coder, char *doing)
 		pthread_mutex_unlock(&coder->sim->logging);
 		return ;
 	}
-	memset(&action, 0, sizeof(char *));
-	if (!strcmp("take", doing))
-		action = "has taken a dongle";
-	else if (!strcmp("compile", doing))
-		action = "is compiling";
-	else if (!strcmp("debug", doing))
-		action = "is debugging";
-	else if (!strcmp("refactor", doing))
-		action = "is refactoring";
-	else if (!strcmp("burnout", doing))
-	{
-		action = "burned out";
+	if (!strcmp("burnout", doing))
 		coder->sim->silence++;
-	}
-	else
+	//memset(&action, 0, sizeof(char *));
+	action = get_phrase(doing);
+	if (!action)
 	{
 		pthread_mutex_unlock(&coder->sim->logging);
 		return ;
 	}
-	color[0] = coder->id % 8 + 8;
-	color[1] = (coder->id + 4) % 8 + 8;
+	color = coder->id % 8 + 8;
 	printf("%ld \x1b[38;5;%dm%d\x1b[39m %s\n",
-		(now() - coder->sim->start_time) / 1000L, color[0], coder->id, action);
+		timestamp(coder->sim->start_time), color, coder->id, action);
 	pthread_mutex_unlock(&coder->sim->logging);
 }
 
@@ -103,7 +110,7 @@ void	write_message(t_coder *coder, char *doing)
 	}
 }*/
 
-void	enqueue_log(t_logger *logger, t_log *log)
+/*void	enqueue_log(t_logger *logger, t_log *log)
 {
 	t_log	*current;
 
@@ -154,4 +161,4 @@ void	send_log(t_coder *coder, char *action)
 	log->timestamp = (now() - coder->sim->start_time) / 1000;
 	pthread_mutex_lock(&coder->sim->logger->mutex);
 	enqueue_log(coder->sim->logger, log);
-}
+}*/

@@ -30,7 +30,7 @@ int	check_status(t_coder **coders)
 			if (t >= coders[i]->deadline && !coders[i]->compiling)
 			{
 				pthread_mutex_unlock(&coders[i]->mutex);
-				return (send_log_at(coders[i], "burnout", t), -1);
+				return (write_message(coders[i], "burnout"), -1);
 			}
 		}
 		pthread_mutex_unlock(&coders[i]->mutex);
@@ -52,7 +52,7 @@ int	wait(t_coder *coder)
 	{
 		if (pthread_cond_timedwait(&coder->cond, &coder->go, &ts) == ETIMEDOUT)
 			return (pthread_mutex_unlock(&coder->go),
-				send_log(coder, "burnout"), tell_to_stop(coder->sim), -1);
+				write_message(coder, "burnout"), tell_to_stop(coder->sim), -1);
 	}
 	if (coder->permission)
 	{

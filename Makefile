@@ -6,7 +6,6 @@ SOURCES =	srcs/coder_actions.c \
 			srcs/heap_utils.c \
 			srcs/init_coders.c \
 			srcs/init_heap.c \
-			srcs/init_logger.c \
 			srcs/logger_ops.c \
 			srcs/main.c \
 			srcs/parsing.c \

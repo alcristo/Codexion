@@ -12,6 +12,11 @@
 
 #include "codexion.h"
 
+long	timestamp(long start)
+{
+	return ((now() - start) / 1000L);
+}
+
 long	now(void)
 {
 	struct timeval	tv;

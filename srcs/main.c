@@ -20,8 +20,8 @@ static void	free_sim(t_sim *sim)
 		free_dongles(sim->dongles);
 	if (sim->heap)
 		free_heap(sim->heap);
-	if (sim->logger)
-		free_logger(sim->logger);
+	//if (sim->logger)
+	//	free_logger(sim->logger);
 	pthread_mutex_destroy(&sim->mutex);
 	pthread_mutex_destroy(&sim->logging);
 	pthread_cond_destroy(&sim->cond);
@@ -58,9 +58,9 @@ static int	init_sim(t_sim *sim)
 	sim->heap = create_heap(sim);
 	if (!sim->heap)
 		return (0);
-	sim->logger = create_logger(sim);
+	/*sim->logger = create_logger(sim);
 	if (!sim->logger)
-		return (0);
+		return (0);*/
 	return (1);
 }
 
