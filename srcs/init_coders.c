@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "codexion.h"
+#include "../include/codexion.h"
 
 void	free_dongles(t_dongle **dongles)
 {

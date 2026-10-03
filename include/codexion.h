@@ -113,7 +113,7 @@ void		preparatives(t_sim *sim);
 int			start_threads(t_threads *threads, t_sim *sim);
 void		threads_failure(t_sim *sim);
 void		start(t_sim *sim);
-void		join_threads(t_threads *threads, int n);
+void		join_threads(t_threads *threads, int init);
 
 // Simulation utils
 int			sim_should_stop(t_sim *sim);

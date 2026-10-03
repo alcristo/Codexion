@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "codexion.h"
+#include "../include/codexion.h"
 
 int	start_threads(t_threads *threads, t_sim *sim)
 {
@@ -19,16 +19,16 @@ int	start_threads(t_threads *threads, t_sim *sim)
 	if (pthread_create(&threads->monitor, NULL, monitor_routine, sim))
 		return (0);
 	if (pthread_create(&threads->waiter, NULL, waiter_routine, sim))
-		return (0);
+		return (1);
 	i = 0;
 	while (i < sim->number)
 	{
 		if (pthread_create(
 				&threads->coders[i], NULL, coder_routine, sim->coders[i]))
-			return (i);
+			return (i + 2);
 		i++;
 	}
-	return (i);
+	return (i + 2);
 }
 
 void	threads_failure(t_sim *sim)
@@ -37,6 +37,7 @@ void	threads_failure(t_sim *sim)
 	sim->stop = 1;
 	pthread_cond_broadcast(&sim->cond);
 	pthread_mutex_unlock(&sim->mutex);
+	tell_to_stop(sim);
 }
 
 void	start(t_sim *sim)
@@ -54,15 +55,25 @@ void	start(t_sim *sim)
 	pthread_mutex_unlock(&sim->mutex);
 }
 
-void	join_threads(t_threads *threads, int n)
+void	join_threads(t_threads *threads, int init)
 {
 	int	i;
+	int	t;
 
-	pthread_join(threads->monitor, NULL);
-	pthread_join(threads->waiter, NULL);
+	t = 0;
+	if (init > 0)
+		pthread_join(threads->monitor, NULL);
+	t++;
+	if (init > 1)
+		pthread_join(threads->waiter, NULL);
+	t++;
 	i = 0;
-	while (i < n)
-		pthread_join(threads->coders[i++], NULL);
+	while (threads->coders[i] && t < init)
+	{
+		pthread_join(threads->coders[i], NULL);
+		i++;
+		t++;
+	}
 }
 
 void	preparatives(t_sim *sim)
@@ -78,7 +89,7 @@ void	preparatives(t_sim *sim)
 	if (!threads->coders)
 		return (free(threads));
 	init = start_threads(threads, sim);
-	if (init < sim->number)
+	if (init < sim->number + 2)
 		threads_failure(sim);
 	else
 		start(sim);

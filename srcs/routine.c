@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "codexion.h"
+#include "../include/codexion.h"
 
 static void	coder_loop(t_coder *coder)
 {
@@ -83,7 +83,7 @@ void	*waiter_routine(void *arg)
 	while (!sim->started && !sim->stop)
 		pthread_cond_wait(&sim->cond, &sim->mutex);
 	pthread_mutex_unlock(&sim->mutex);
-	if (sim->number == 1)
+	if (sim->number == 1 || sim_should_stop(sim))
 		return (NULL);
 	pthread_mutex_lock(&sim->heap->mutex);
 	while (!sim_should_stop(sim) && sim->heap->size < sim->heap->capacity)
