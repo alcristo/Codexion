@@ -68,9 +68,11 @@ When a dongle is released, its time to be cool is calculated before the coder un
 
 ### Precise burnout detection
 
+This program logs burnout with a 10 ms precision.
+
 In order to detect burnout, each coder waits on their `cond` condition variable while holding their `go` mutex. Such wait is timed to the coder's deadline, so the moment the coder misses their deadline a burnout message is logged.
 
-The monitor is also detecting burnout on each coder while it's checking that everybody has finished.
+As a failsafe, the monitor is also detecting burnout on each coder while it's checking they're finished.
 
 ### Log serialization
 
