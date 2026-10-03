@@ -56,5 +56,4 @@ dkms.conf
 
 # other
 *.pdf
-chat.md
-.gitignore
+codexion
