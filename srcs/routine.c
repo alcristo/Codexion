@@ -18,12 +18,6 @@ static void	coder_loop(t_coder *coder)
 	int	compiled;
 
 	requests = 0;
-	pthread_mutex_lock(&coder->sim->mutex);
-	while (!coder->sim->started && !coder->sim->stop)
-		pthread_cond_wait(&coder->sim->cond, &coder->sim->mutex);
-	pthread_mutex_unlock(&coder->sim->mutex);
-	if (coder->id % 2 == 0)
-		ft_sleep(coder->sim, coder->sim->time_compile / 2);
 	while (!sim_should_stop(coder->sim))
 	{
 		if (enqueue(coder->sim->heap, coder, requests))
@@ -52,6 +46,8 @@ void	*coder_routine(void *arg)
 	pthread_mutex_lock(&coder->mutex);
 	coder->deadline = coder->sim->start_time + coder->sim->time_burnout;
 	pthread_mutex_unlock(&coder->mutex);
+	if (coder->id % 2 == 0)
+		ft_sleep(coder->sim, coder->sim->time_compile / 2);
 	coder_loop(coder);
 	return (NULL);
 }

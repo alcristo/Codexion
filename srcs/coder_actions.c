@@ -30,7 +30,8 @@ int	check_status(t_coder **coders)
 			if (t >= coders[i]->deadline && !coders[i]->compiling)
 			{
 				pthread_mutex_unlock(&coders[i]->mutex);
-				return (write_message(coders[i], "burnout"), -1);
+				return (write_message(coders[i], "burnout"),
+					tell_to_stop(coders[i]->sim), -1);
 			}
 		}
 		pthread_mutex_unlock(&coders[i]->mutex);

@@ -18,7 +18,7 @@ SOURCES =	srcs/coder_actions.c \
 OBJECTS = $(SOURCES:.c=.o)
 
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -pthrea
+CFLAGS = -Wall -Wextra -Werror -pthread
 RM = rm -f
 
 %.o:%.c

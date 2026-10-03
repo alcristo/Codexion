@@ -128,7 +128,6 @@ void		ft_sleep(t_sim *sim, int t);
 void		*coder_routine(void *arg);
 void		*monitor_routine(void *arg);
 void		*waiter_routine(void *arg);
-void		*logger_routine(void *arg);
 
 // Coder actions
 int			compile(t_coder *coder);

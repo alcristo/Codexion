@@ -17,9 +17,9 @@ int	start_threads(t_threads *threads, t_sim *sim)
 	int	i;
 
 	if (pthread_create(&threads->monitor, NULL, monitor_routine, sim))
-		return (1);
+		return (0);
 	if (pthread_create(&threads->waiter, NULL, waiter_routine, sim))
-		return (1);
+		return (0);
 	i = 0;
 	while (i < sim->number)
 	{
